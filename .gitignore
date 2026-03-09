@@ -1,0 +1,15 @@
+/target
+
+# Claude Code — local settings and research artifacts
+.claude/settings.local.json
+.claude/todos/
+.claude/memories/
+.claude/plans/
+.claude/logs/
+.claude/cache/
+.claude/sessions/
+.claude/tmp/
+CLAUDE.local.md
+
+# Internal research artifacts — not for public repo
+hypotheses/

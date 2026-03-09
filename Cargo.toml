@@ -1,0 +1,34 @@
+[package]
+name = "tempura"
+version = "0.1.0"
+edition = "2021"
+description = "Temperature-Driven Optimization Primitives for Rust"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tempura-rs/tempura"
+keywords = ["annealing", "optimization", "simulated-annealing", "metaheuristic"]
+categories = ["algorithms", "science", "simulation"]
+
+[dependencies]
+# Zero runtime dependencies — all performance-critical code is self-contained.
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+statrs = "0.17"
+approx = "0.5"
+rand = "0.8"
+rand_chacha = "0.3"
+rand_pcg = "0.3"
+rand_xoshiro = "0.6"
+
+[[bench]]
+name = "throughput"
+harness = false
+
+[[bench]]
+name = "h09_cache_layout"
+harness = false
+
+[[bench]]
+name = "h10_branchless"
+harness = false
