@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="media/logo-hero.png" alt="Tempura logo" width="480">
+</p>
+
 # tempura
 
 [![Crates.io](https://img.shields.io/crates/v/tempura.svg)](https://crates.io/crates/tempura)
