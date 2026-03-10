@@ -43,10 +43,7 @@ impl Energy<Vec<f64>> for Rastrigin {
         let a = 10.0;
         let two_pi = 2.0 * core::f64::consts::PI;
         a * self.dim as f64
-            + state
-                .iter()
-                .map(|&x| x.mul_add(x, -a * (two_pi * x).cos()))
-                .sum::<f64>()
+            + state.iter().map(|&x| x.mul_add(x, -a * (two_pi * x).cos())).sum::<f64>()
     }
 }
 

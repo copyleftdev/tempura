@@ -43,11 +43,13 @@ fn h05a_pt_beats_sa_on_barrier() {
         let pt_result = parallel::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_temperatures(0.5, 100.0, num_replicas).unwrap()
+            .geometric_temperatures(0.5, 100.0, num_replicas)
+            .unwrap()
             .iterations(total_budget / num_replicas as u64)
             .swap_interval(10)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(0);
 
         if well.in_global_basin(pt_result.best_state) {
@@ -61,7 +63,8 @@ fn h05a_pt_beats_sa_on_barrier() {
             .schedule(tempura::schedule::Exponential::new(100.0, 0.99999))
             .iterations(total_budget)
             .seed(seed)
-            .build().unwrap();
+            .build()
+            .unwrap();
         let sa_result = sa.run(0);
 
         if well.in_global_basin(sa_result.best_state) {
@@ -81,11 +84,7 @@ fn h05a_pt_beats_sa_on_barrier() {
     );
 
     // PT should achieve meaningful success rate
-    assert!(
-        pt_rate > 0.20,
-        "H-05a FAILED: PT success rate {:.1}% < 20%",
-        pt_rate * 100.0
-    );
+    assert!(pt_rate > 0.20, "H-05a FAILED: PT success rate {:.1}% < 20%", pt_rate * 100.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -115,11 +114,13 @@ fn h05b_uniform_swap_rates_geometric() {
         let result = parallel::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_temperatures(0.5, 50.0, num_replicas).unwrap()
+            .geometric_temperatures(0.5, 50.0, num_replicas)
+            .unwrap()
             .iterations(200_000)
             .swap_interval(10)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(25); // start at center
 
         for (i, &rate) in result.diagnostics.swap_rates.iter().enumerate() {
@@ -147,11 +148,7 @@ fn h05b_uniform_swap_rates_geometric() {
 
     // All swap rates should be in a reasonable range (not 0 or 1)
     for (i, &rate) in mean_rates.iter().enumerate() {
-        assert!(
-            rate > 0.0,
-            "H-05b FAILED: pair {} has zero swap rate",
-            i
-        );
+        assert!(rate > 0.0, "H-05b FAILED: pair {} has zero swap rate", i);
     }
 }
 
@@ -191,11 +188,13 @@ fn h05c_marginal_boltzmann_convergence() {
             let result = parallel::builder::<i64>()
                 .objective(well.clone())
                 .moves(mv.clone())
-                .temperatures(temperatures.clone()).unwrap()
+                .temperatures(temperatures.clone())
+                .unwrap()
                 .iterations(500 + sub_seed * 20)
                 .swap_interval(10)
                 .seed(combined_seed)
-                .build().unwrap()
+                .build()
+                .unwrap()
                 .run(10); // start at center
 
             // Coldest replica is index 0
@@ -233,11 +232,13 @@ fn h05d_deterministic_reproducibility() {
         parallel::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_temperatures(0.5, 30.0, 4).unwrap()
+            .geometric_temperatures(0.5, 30.0, 4)
+            .unwrap()
             .iterations(50_000)
             .swap_interval(10)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(15)
     };
 
@@ -260,11 +261,13 @@ fn h05_swap_diagnostics() {
     let result = parallel::builder::<i64>()
         .objective(well.clone())
         .moves(mv.clone())
-        .geometric_temperatures(0.5, 50.0, 6).unwrap()
+        .geometric_temperatures(0.5, 50.0, 6)
+        .unwrap()
         .iterations(100_000)
         .swap_interval(10)
         .seed(42)
-        .build().unwrap()
+        .build()
+        .unwrap()
         .run(10);
 
     // 6 replicas → 5 adjacent pairs
@@ -287,6 +290,7 @@ fn h05_swap_diagnostics() {
     assert!(
         rates[5] > rates[0],
         "highest T replica ({:.3}) should accept more than coldest ({:.3})",
-        rates[5], rates[0]
+        rates[5],
+        rates[0]
     );
 }

@@ -44,9 +44,7 @@ impl Ising2D {
 
     /// Create a random initial state.
     pub fn random_state(&self, rng: &mut impl Rng) -> IsingState {
-        (0..self.num_spins())
-            .map(|_| if rng.next_u64() & 1 == 0 { 1i8 } else { -1i8 })
-            .collect()
+        (0..self.num_spins()).map(|_| if rng.next_u64() & 1 == 0 { 1i8 } else { -1i8 }).collect()
     }
 
     /// Create an all-up initial state.
@@ -79,11 +77,7 @@ impl Ising2D {
     /// This is O(1) — the key to efficient single-spin-flip Metropolis.
     pub fn delta_energy_flip(&self, state: &IsingState, idx: usize) -> f64 {
         let s = f64::from(state[idx]);
-        let neighbor_sum: f64 = self
-            .neighbors(idx)
-            .iter()
-            .map(|&n| f64::from(state[n]))
-            .sum();
+        let neighbor_sum: f64 = self.neighbors(idx).iter().map(|&n| f64::from(state[n])).sum();
         2.0 * self.j * s * neighbor_sum
     }
 
@@ -97,9 +91,8 @@ impl Ising2D {
         let total_states = 1u64 << n;
         let mut z = 0.0f64;
         for bits in 0..total_states {
-            let state: IsingState = (0..n)
-                .map(|i| if bits & (1 << i) != 0 { 1i8 } else { -1i8 })
-                .collect();
+            let state: IsingState =
+                (0..n).map(|i| if bits & (1 << i) != 0 { 1i8 } else { -1i8 }).collect();
             let e = self.energy(&state);
             z += (-e / temperature).exp();
         }
@@ -119,9 +112,8 @@ impl Ising2D {
         let mut sum_e_boltz = 0.0f64;
         let mut z = 0.0f64;
         for bits in 0..total_states {
-            let state: IsingState = (0..n)
-                .map(|i| if bits & (1 << i) != 0 { 1i8 } else { -1i8 })
-                .collect();
+            let state: IsingState =
+                (0..n).map(|i| if bits & (1 << i) != 0 { 1i8 } else { -1i8 }).collect();
             let e = self.energy(&state);
             let boltz = (-e / temperature).exp();
             sum_e_boltz += e * boltz;

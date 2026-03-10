@@ -142,10 +142,9 @@ pub fn integrated_autocorrelation_time(series: &[f64]) -> f64 {
     let mut tau = 0.5; // start with gamma(0)/2
     let max_lag = n / 2;
     for lag in 1..max_lag {
-        let gamma: f64 = (0..n - lag)
-            .map(|i| (series[i] - mean) * (series[i + lag] - mean))
-            .sum::<f64>()
-            / n as f64;
+        let gamma: f64 =
+            (0..n - lag).map(|i| (series[i] - mean) * (series[i + lag] - mean)).sum::<f64>()
+                / n as f64;
         let rho = gamma / var;
         if rho < 0.0 {
             break; // truncate at first negative autocorrelation

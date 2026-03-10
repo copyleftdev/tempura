@@ -44,12 +44,7 @@ fn run_aos_population(
             let mut rng = Xoshiro256PlusPlus::from_seed(member_seed);
             let state: Vec<f64> = (0..dim).map(|_| rng.next_f64() * 10.24 - 5.12).collect();
             let energy = landscape.energy(&state);
-            AosMember {
-                state,
-                energy,
-                best_energy: energy,
-                rng,
-            }
+            AosMember { state, energy, best_energy: energy, rng }
         })
         .collect();
 
@@ -79,10 +74,7 @@ fn run_aos_population(
         }
     }
 
-    members
-        .iter()
-        .map(|m| m.best_energy)
-        .fold(f64::INFINITY, f64::min)
+    members.iter().map(|m| m.best_energy).fold(f64::INFINITY, f64::min)
 }
 
 /// SoA (Structure-of-Arrays) layout: separate arrays for each field.
@@ -147,10 +139,7 @@ fn run_soa_population(
         }
     }
 
-    pop.best_energies
-        .iter()
-        .copied()
-        .fold(f64::INFINITY, f64::min)
+    pop.best_energies.iter().copied().fold(f64::INFINITY, f64::min)
 }
 
 // ---------------------------------------------------------------------------
@@ -177,24 +166,12 @@ fn h09a_soa_not_slower_than_aos() {
     let soa_time = start_soa.elapsed();
 
     // Both should find finite energies (not testing optimization quality here)
-    assert!(
-        aos_energy.is_finite(),
-        "AoS energy not finite: {:.2}",
-        aos_energy
-    );
-    assert!(
-        soa_energy.is_finite(),
-        "SoA energy not finite: {:.2}",
-        soa_energy
-    );
+    assert!(aos_energy.is_finite(), "AoS energy not finite: {:.2}", aos_energy);
+    assert!(soa_energy.is_finite(), "SoA energy not finite: {:.2}", soa_energy);
 
     // SoA should not be dramatically slower (allow 2x in debug mode)
     let ratio = soa_time.as_nanos() as f64 / aos_time.as_nanos().max(1) as f64;
-    assert!(
-        ratio < 2.0,
-        "H-09a: SoA {:.1}x slower than AoS (should be similar or faster)",
-        ratio
-    );
+    assert!(ratio < 2.0, "H-09a: SoA {:.1}x slower than AoS (should be similar or faster)", ratio);
 }
 
 // ---------------------------------------------------------------------------
@@ -224,14 +201,8 @@ fn h09b_both_layouts_scale_with_dimension() {
     }
 
     // Both should take longer with higher dimensions (monotonic)
-    assert!(
-        aos_times[2] > aos_times[0],
-        "AoS should take longer with higher dim"
-    );
-    assert!(
-        soa_times[2] > soa_times[0],
-        "SoA should take longer with higher dim"
-    );
+    assert!(aos_times[2] > aos_times[0], "AoS should take longer with higher dim");
+    assert!(soa_times[2] > soa_times[0], "SoA should take longer with higher dim");
 }
 
 // ---------------------------------------------------------------------------

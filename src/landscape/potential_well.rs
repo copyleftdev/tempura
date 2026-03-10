@@ -27,10 +27,7 @@ impl PotentialWell {
     /// Create a potential well with `n` states, centered at `n/2`.
     pub fn new(n: usize) -> Self {
         assert!(n >= 2, "need at least 2 states");
-        Self {
-            n,
-            center: n as f64 / 2.0,
-        }
+        Self { n, center: n as f64 / 2.0 }
     }
 
     /// Override the well center position.
@@ -53,17 +50,11 @@ impl PotentialWell {
             .collect();
 
         // Log-sum-exp for numerical stability
-        let max_lw = log_weights
-            .iter()
-            .copied()
-            .fold(f64::NEG_INFINITY, f64::max);
+        let max_lw = log_weights.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         let sum_exp: f64 = log_weights.iter().map(|&lw| (lw - max_lw).exp()).sum();
         let log_z = max_lw + sum_exp.ln();
 
-        log_weights
-            .iter()
-            .map(|&lw| (lw - log_z).exp())
-            .collect()
+        log_weights.iter().map(|&lw| (lw - log_z).exp()).collect()
     }
 
     /// Compute the exact partition function Z(T).
@@ -136,12 +127,7 @@ mod tests {
         for &t in &[0.5, 1.0, 2.0, 5.0, 10.0, 50.0] {
             let dist = well.exact_boltzmann(t);
             let sum: f64 = dist.iter().sum();
-            assert!(
-                (sum - 1.0).abs() < 1e-12,
-                "Boltzmann distribution at T={} sums to {}",
-                t,
-                sum
-            );
+            assert!((sum - 1.0).abs() < 1e-12, "Boltzmann distribution at T={} sums to {}", t, sum);
         }
     }
 

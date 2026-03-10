@@ -78,10 +78,22 @@ impl Rng for Xoshiro256PlusPlus {
         // Scramble user seed through splitmix64 to fill 256-bit state.
         // This ensures sequential seeds produce uncorrelated states.
         let mut z = seed;
-        let s0 = { z = splitmix64(z); z };
-        let s1 = { z = splitmix64(z); z };
-        let s2 = { z = splitmix64(z); z };
-        let s3 = { z = splitmix64(z); z };
+        let s0 = {
+            z = splitmix64(z);
+            z
+        };
+        let s1 = {
+            z = splitmix64(z);
+            z
+        };
+        let s2 = {
+            z = splitmix64(z);
+            z
+        };
+        let s3 = {
+            z = splitmix64(z);
+            z
+        };
         // Safety: splitmix64 of any non-degenerate seed will produce
         // at least one non-zero value. Belt-and-suspenders check:
         let s = [s0, s1, s2, s3];
@@ -92,9 +104,7 @@ impl Rng for Xoshiro256PlusPlus {
     #[allow(clippy::inline_always)]
     #[inline(always)]
     fn next_u64(&mut self) -> u64 {
-        let result = (self.s[0].wrapping_add(self.s[3]))
-            .rotate_left(23)
-            .wrapping_add(self.s[0]);
+        let result = (self.s[0].wrapping_add(self.s[3])).rotate_left(23).wrapping_add(self.s[0]);
 
         let t = self.s[1] << 17;
 
@@ -149,9 +159,7 @@ impl Rng for Pcg64 {
     fn next_u64(&mut self) -> u64 {
         let old_state = self.state;
         // LCG step
-        self.state = old_state
-            .wrapping_mul(6_364_136_223_846_793_005)
-            .wrapping_add(self.inc);
+        self.state = old_state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(self.inc);
         // XSL-RR output function
         let xsl = ((old_state >> 64) ^ old_state) as u64;
         let rot = (old_state >> 122) as u32;

@@ -93,9 +93,9 @@ where
         let mut best_energy = energy;
         let mut diagnostics = RunDiagnostics::new(initial_energy);
 
-        let mut trajectory = self.trajectory_interval.map(|interval| {
-            TrajectoryRecorder::new(interval).with_capacity(self.iterations)
-        });
+        let mut trajectory = self
+            .trajectory_interval
+            .map(|interval| TrajectoryRecorder::new(interval).with_capacity(self.iterations));
 
         // === HOT LOOP ===
         // This is the inner loop that must be as tight as possible.
@@ -325,11 +325,7 @@ mod tests {
             .unwrap()
             .run(vec![5.0, -3.0, 7.0]);
 
-        assert!(
-            result.best_energy < 1.0,
-            "should find near-origin: E={}",
-            result.best_energy
-        );
+        assert!(result.best_energy < 1.0, "should find near-origin: E={}", result.best_energy);
     }
 
     #[test]
@@ -385,10 +381,6 @@ mod tests {
             .run(vec![5.0, -3.0, 7.0]);
 
         let rate = result.diagnostics.acceptance_rate();
-        assert!(
-            rate > 0.05 && rate < 0.95,
-            "acceptance rate should be reasonable: {}",
-            rate
-        );
+        assert!(rate > 0.05 && rate < 0.95, "acceptance rate should be reasonable: {}", rate);
     }
 }

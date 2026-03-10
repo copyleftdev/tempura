@@ -23,7 +23,6 @@ fn branching_metropolis_accept(delta_e: f64, temperature: f64, u: f64) -> bool {
     }
 }
 
-
 // ---------------------------------------------------------------------------
 // H-10a: Branchless throughput (directional check)
 // ---------------------------------------------------------------------------
@@ -68,18 +67,11 @@ fn h10a_branchless_throughput() {
     let branchless_time = start.elapsed();
 
     // Both should agree on accept count
-    assert_eq!(
-        branching_accepts, branchless_accepts,
-        "branching and branchless must agree"
-    );
+    assert_eq!(branching_accepts, branchless_accepts, "branching and branchless must agree");
 
     // Branchless should not be dramatically slower
     let ratio = branchless_time.as_nanos() as f64 / branching_time.as_nanos().max(1) as f64;
-    assert!(
-        ratio < 3.0,
-        "H-10a: branchless {:.1}x slower than branching",
-        ratio
-    );
+    assert!(ratio < 3.0, "H-10a: branchless {:.1}x slower than branching", ratio);
 }
 
 // ---------------------------------------------------------------------------
@@ -105,11 +97,7 @@ fn h10b_extreme_acceptance_rates() {
         }
     }
     let rate_high = accepts_high as f64 / num_decisions as f64;
-    assert!(
-        rate_high > 0.90,
-        "High-T acceptance should be >90%: {:.1}%",
-        rate_high * 100.0
-    );
+    assert!(rate_high > 0.90, "High-T acceptance should be >90%: {:.1}%", rate_high * 100.0);
 
     // Low acceptance rate (T very low, nearly all rejected)
     let temperature_low = 0.01;
@@ -122,11 +110,7 @@ fn h10b_extreme_acceptance_rates() {
         }
     }
     let rate_low = accepts_low as f64 / num_decisions as f64;
-    assert!(
-        rate_low < 0.01,
-        "Low-T acceptance should be <1%: {:.1}%",
-        rate_low * 100.0
-    );
+    assert!(rate_low < 0.01, "Low-T acceptance should be <1%: {:.1}%", rate_low * 100.0);
 }
 
 // ---------------------------------------------------------------------------
@@ -212,7 +196,9 @@ fn h10d_fast_exp_indistinguishable() {
             if math::metropolis_accept(de, t, u) {
                 state = candidate;
                 energy = ce;
-                if ce < best_e { best_e = ce; }
+                if ce < best_e {
+                    best_e = ce;
+                }
             }
         }
         exact_energies.push(best_e);
@@ -233,15 +219,13 @@ fn h10d_fast_exp_indistinguishable() {
             let de = ce - energy;
             let t = 100.0 * 0.9999f64.powi(step as i32);
             let u = rng.next_f64();
-            let accepted = if de <= 0.0 {
-                true
-            } else {
-                u < math::fast_exp(-de / t)
-            };
+            let accepted = if de <= 0.0 { true } else { u < math::fast_exp(-de / t) };
             if accepted {
                 state = candidate;
                 energy = ce;
-                if ce < best_e { best_e = ce; }
+                if ce < best_e {
+                    best_e = ce;
+                }
             }
         }
         fast_energies.push(best_e);
@@ -303,9 +287,5 @@ fn h10_fast_exp_accuracy() {
         }
     }
 
-    assert!(
-        max_rel_error < 0.04,
-        "fast_exp max relative error {:.2}% > 4%",
-        max_rel_error * 100.0
-    );
+    assert!(max_rel_error < 0.04, "fast_exp max relative error {:.2}% > 4%", max_rel_error * 100.0);
 }

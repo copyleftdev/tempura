@@ -29,10 +29,7 @@ fn acceptance_rate_at_temp(t: f64, num_proposals: u64, seed: u64) -> f64 {
     let mut rng = Xoshiro256PlusPlus::from_seed(seed);
 
     // Start from a random point in [-5, 5]²
-    let mut state = vec![
-        rng.next_f64() * 10.0 - 5.0,
-        rng.next_f64() * 10.0 - 5.0,
-    ];
+    let mut state = vec![rng.next_f64() * 10.0 - 5.0, rng.next_f64() * 10.0 - 5.0];
     let mut energy = rastrigin.energy(&state);
 
     // Burn-in: 1000 steps at temperature T to reach quasi-equilibrium
@@ -80,9 +77,8 @@ fn h04a_acceptance_rate_monotonic_in_temperature() {
     let mut mean_rates = Vec::new();
 
     for &t in &temperatures {
-        let total_rate: f64 = (0..num_seeds)
-            .map(|seed| acceptance_rate_at_temp(t, num_proposals, seed))
-            .sum();
+        let total_rate: f64 =
+            (0..num_seeds).map(|seed| acceptance_rate_at_temp(t, num_proposals, seed)).sum();
         mean_rates.push(total_rate / num_seeds as f64);
     }
 
@@ -91,17 +87,15 @@ fn h04a_acceptance_rate_monotonic_in_temperature() {
         assert!(
             mean_rates[i] >= mean_rates[i - 1] - 0.02,
             "H-04a FAILED: r(T={}) = {:.3} < r(T={}) = {:.3} - 0.02 (not monotonic)",
-            temperatures[i], mean_rates[i],
-            temperatures[i - 1], mean_rates[i - 1]
+            temperatures[i],
+            mean_rates[i],
+            temperatures[i - 1],
+            mean_rates[i - 1]
         );
     }
 
     // Boundary conditions: very low T → low acceptance, very high T → near 1
-    assert!(
-        mean_rates[0] < 0.5,
-        "H-04a: r(T=0.01) should be low, got {:.3}",
-        mean_rates[0]
-    );
+    assert!(mean_rates[0] < 0.5, "H-04a: r(T=0.01) should be low, got {:.3}", mean_rates[0]);
     assert!(
         mean_rates[mean_rates.len() - 1] > 0.9,
         "H-04a: r(T=1000) should be near 1, got {:.3}",
@@ -139,7 +133,8 @@ fn h04b_adaptive_vs_tuned_exponential() {
                     .schedule(sched)
                     .iterations(iterations)
                     .seed(seed)
-                    .build().unwrap();
+                    .build()
+                    .unwrap();
                 let start = vec![3.0, -3.0];
                 energies.push(sa.run(start).best_energy);
             }
@@ -156,10 +151,8 @@ fn h04b_adaptive_vs_tuned_exponential() {
     let mut adaptive_energies = Vec::new();
     for seed in 0..num_seeds {
         let mut rng = Xoshiro256PlusPlus::from_seed(seed);
-        let mut schedule = Adaptive::new(100.0, 0.44)
-            .with_gamma(1.0)
-            .with_window(500)
-            .with_bounds(1e-6, 1e6);
+        let mut schedule =
+            Adaptive::new(100.0, 0.44).with_gamma(1.0).with_window(500).with_bounds(1e-6, 1e6);
 
         let mut state = vec![3.0, -3.0];
         let mut energy = rastrigin.energy(&state);
@@ -255,7 +248,10 @@ fn h04c_adaptive_stability() {
                 assert!(
                     t > 0.0 && t.is_finite(),
                     "γ={}, W={}: T[{}]={} (not positive/finite)",
-                    gamma, window, i, t
+                    gamma,
+                    window,
+                    i,
+                    t
                 );
             }
 
@@ -269,7 +265,9 @@ fn h04c_adaptive_stability() {
                     assert!(
                         ratio < 1000.0,
                         "γ={}, W={}: oscillation ratio {:.1} > 1000 (unstable)",
-                        gamma, window, ratio
+                        gamma,
+                        window,
+                        ratio
                     );
                 }
             }
@@ -281,7 +279,10 @@ fn h04c_adaptive_stability() {
             assert!(
                 last_t < first_t,
                 "γ={}, W={}: final T ({:.3}) not less than initial T ({:.3})",
-                gamma, window, last_t, first_t
+                gamma,
+                window,
+                last_t,
+                first_t
             );
         }
     }
@@ -305,10 +306,8 @@ fn h04d_window_size_effect() {
 
     for &window in &windows {
         let mut rng = Xoshiro256PlusPlus::from_seed(42);
-        let mut schedule = Adaptive::new(100.0, 0.44)
-            .with_gamma(1.0)
-            .with_window(window)
-            .with_bounds(1e-10, 1e10);
+        let mut schedule =
+            Adaptive::new(100.0, 0.44).with_gamma(1.0).with_window(window).with_bounds(1e-10, 1e10);
 
         let mut state = vec![3.0, -3.0];
         let mut energy = rastrigin.energy(&state);

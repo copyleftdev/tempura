@@ -48,11 +48,7 @@ impl Linear {
     pub fn new(t0: f64, alpha: f64) -> Self {
         assert!(t0 > 0.0, "initial temperature must be positive");
         assert!(alpha > 0.0, "cooling rate must be positive");
-        Self {
-            t0,
-            alpha,
-            t_min: 1e-10,
-        }
+        Self { t0, alpha, t_min: 1e-10 }
     }
 
     /// Set the minimum temperature floor.
@@ -95,11 +91,7 @@ impl Exponential {
     pub fn new(t0: f64, alpha: f64) -> Self {
         assert!(t0 > 0.0, "initial temperature must be positive");
         assert!((0.0..1.0).contains(&alpha), "alpha must be in (0, 1)");
-        Self {
-            t0,
-            alpha,
-            t_min: 1e-10,
-        }
+        Self { t0, alpha, t_min: 1e-10 }
     }
 
     /// Set the minimum temperature floor.
@@ -292,10 +284,7 @@ impl Adaptive {
     /// Create an adaptive schedule targeting a given acceptance rate.
     pub fn new(initial_t: f64, target_rate: f64) -> Self {
         assert!(initial_t > 0.0, "initial temperature must be positive");
-        assert!(
-            (0.0..1.0).contains(&target_rate),
-            "target rate must be in (0, 1)"
-        );
+        assert!((0.0..1.0).contains(&target_rate), "target rate must be in (0, 1)");
         Self {
             target_rate,
             gamma: 1.0,

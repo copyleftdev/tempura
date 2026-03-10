@@ -60,8 +60,8 @@ fn generate_returns(n_assets: usize, t_days: usize, seed: u64) -> Vec<Vec<f64>> 
     // Asset parameters: [beta, idiosyncratic_vol, drift]
     let params: Vec<(f64, f64, f64)> = (0..n_assets)
         .map(|i| {
-            let beta  = 0.5 + (i as f64 / n_assets as f64) * 1.0; // 0.5 to 1.5
-            let ivol  = 0.006 + (i as f64 / n_assets as f64) * 0.012;
+            let beta = 0.5 + (i as f64 / n_assets as f64) * 1.0; // 0.5 to 1.5
+            let ivol = 0.006 + (i as f64 / n_assets as f64) * 0.012;
             let drift = 0.00015 * (1.0 + i as f64 % 3 as f64 * 0.5); // small positive drift
             (beta, ivol, drift)
         })
@@ -87,21 +87,29 @@ fn normal_sample(rng: &mut impl Rng) -> f64 {
 
 /// Annualised Sharpe ratio from a return series.
 fn sharpe(rets: &[f64]) -> f64 {
-    if rets.len() < 2 { return 0.0; }
+    if rets.len() < 2 {
+        return 0.0;
+    }
     let mu = mean(rets);
     let sigma = std_dev(rets);
-    if sigma < 1e-12 { return 0.0; }
+    if sigma < 1e-12 {
+        return 0.0;
+    }
     mu / sigma * (252.0f64).sqrt()
 }
 
 /// Annualised Sortino ratio (downside deviation denominator).
 fn sortino(rets: &[f64]) -> f64 {
-    if rets.len() < 2 { return 0.0; }
+    if rets.len() < 2 {
+        return 0.0;
+    }
     let mu = mean(rets);
-    let downside_var: f64 = rets.iter().map(|&r| r.min(0.0).powi(2)).sum::<f64>()
-        / rets.len() as f64;
+    let downside_var: f64 =
+        rets.iter().map(|&r| r.min(0.0).powi(2)).sum::<f64>() / rets.len() as f64;
     let downside_std = downside_var.sqrt();
-    if downside_std < 1e-12 { return 0.0; }
+    if downside_std < 1e-12 {
+        return 0.0;
+    }
     mu / downside_std * (252.0f64).sqrt()
 }
 
@@ -123,9 +131,13 @@ fn max_drawdown(rets: &[f64]) -> f64 {
     let mut dd = 0.0f64;
     for &r in rets {
         nav *= 1.0 + r;
-        if nav > peak { peak = nav; }
+        if nav > peak {
+            peak = nav;
+        }
         let current_dd = (peak - nav) / peak;
-        if current_dd > dd { dd = current_dd; }
+        if current_dd > dd {
+            dd = current_dd;
+        }
     }
     dd
 }
@@ -185,19 +197,17 @@ fn ex01_mv_transaction_cost() -> Result<(), AnnealError> {
         for j in 0..N {
             let mu_i = asset_means[i];
             let mu_j = asset_means[j];
-            cov[i][j] = (0..T)
-                .map(|t| (rets[i][t] - mu_i) * (rets[j][t] - mu_j))
-                .sum::<f64>()
-                / T as f64;
+            cov[i][j] =
+                (0..T).map(|t| (rets[i][t] - mu_i) * (rets[j][t] - mu_j)).sum::<f64>() / T as f64;
         }
     }
 
     // Previous portfolio weights (for transaction cost calculation)
     let prev_weights = vec![1.0 / N as f64; N];
-    let lambda_risk  = 3.0f64;   // risk aversion
-    let lambda_cost  = 10.0f64;  // transaction cost per unit turnover
-    let lambda_card  = 0.02f64;  // cardinality penalty per position
-    let tc_rate      = 0.001f64; // 10 bps one-way transaction cost
+    let lambda_risk = 3.0f64; // risk aversion
+    let lambda_cost = 10.0f64; // transaction cost per unit turnover
+    let lambda_card = 0.02f64; // cardinality penalty per position
+    let tc_rate = 0.001f64; // 10 bps one-way transaction cost
 
     let energy = FnEnergy(move |raw: &Vec<f64>| {
         let w = simplex_project(raw);
@@ -206,17 +216,11 @@ fn ex01_mv_transaction_cost() -> Result<(), AnnealError> {
         let port_ret: f64 = w.iter().zip(asset_means.iter()).map(|(wi, ri)| wi * ri).sum();
 
         // Portfolio variance via covariance matrix
-        let port_var: f64 = (0..N)
-            .map(|i| (0..N)
-                .map(|j| w[i] * w[j] * cov[i][j])
-                .sum::<f64>())
-            .sum();
+        let port_var: f64 =
+            (0..N).map(|i| (0..N).map(|j| w[i] * w[j] * cov[i][j]).sum::<f64>()).sum();
 
         // Transaction cost: L1 turnover from previous weights × tc_rate
-        let turnover: f64 = w.iter()
-            .zip(prev_weights.iter())
-            .map(|(wi, pw)| (wi - pw).abs())
-            .sum();
+        let turnover: f64 = w.iter().zip(prev_weights.iter()).map(|(wi, pw)| (wi - pw).abs()).sum();
 
         // Cardinality: count non-trivial positions
         let n_positions = w.iter().filter(|&&wi| wi > 0.005).count() as f64;
@@ -239,10 +243,8 @@ fn ex01_mv_transaction_cost() -> Result<(), AnnealError> {
         .run(initial);
 
     let w = simplex_project(&result.best_state);
-    let port_ret: f64 = w.iter()
-        .zip(asset_means_report.iter())
-        .map(|(wi, ri)| wi * ri * 252.0)
-        .sum();
+    let port_ret: f64 =
+        w.iter().zip(asset_means_report.iter()).map(|(wi, ri)| wi * ri * 252.0).sum();
     let n_pos = w.iter().filter(|&&wi| wi > 0.005).count();
 
     println!(
@@ -281,11 +283,13 @@ fn ex02_technical_strategy() -> Result<(), AnnealError> {
         let mut ps = Vec::with_capacity(T);
         for _ in 0..T {
             let drift = 0.0003;
-            let vol   = 0.015;
-            let jump  = if rng.next_f64() < 0.02 {
+            let vol = 0.015;
+            let jump = if rng.next_f64() < 0.02 {
                 // 2% chance of ±5% jump
                 (if rng.next_f64() < 0.5 { 1.0 } else { -1.0 }) * 0.05
-            } else { 0.0 };
+            } else {
+                0.0
+            };
             p *= (drift + vol * normal_sample(&mut rng) + jump).exp();
             ps.push(p);
         }
@@ -298,9 +302,9 @@ fn ex02_technical_strategy() -> Result<(), AnnealError> {
     // params: [fast(2-20), slow(10-100), rsi_p(5-30), rsi_lo(20-40),
     //          rsi_hi(60-80), atr_mult(0.5-3), stop_atr(0.5-3)]
     let energy = FnEnergy(move |params: &Vec<f64>| {
-        let fast   = (params[0].abs() % 18.0 + 2.0) as usize;  // 2..20
-        let slow   = (params[1].abs() % 90.0 + fast as f64 + 2.0) as usize; // fast+2..fast+92
-        let rsi_p  = (params[2].abs() % 25.0 + 5.0) as usize;  // 5..30
+        let fast = (params[0].abs() % 18.0 + 2.0) as usize; // 2..20
+        let slow = (params[1].abs() % 90.0 + fast as f64 + 2.0) as usize; // fast+2..fast+92
+        let rsi_p = (params[2].abs() % 25.0 + 5.0) as usize; // 5..30
         let rsi_lo = params[3].clamp(20.0, 40.0);
         let rsi_hi = params[4].clamp(60.0, 80.0);
 
@@ -308,12 +312,13 @@ fn ex02_technical_strategy() -> Result<(), AnnealError> {
             return 1e9;
         }
         let warmup = slow.max(rsi_p) + 1;
-        if warmup + 10 >= prices_clone.len() { return 1e9; }
+        if warmup + 10 >= prices_clone.len() {
+            return 1e9;
+        }
 
         // Compute daily returns
-        let daily_ret: Vec<f64> = (1..prices_clone.len())
-            .map(|t| prices_clone[t] / prices_clone[t - 1] - 1.0)
-            .collect();
+        let daily_ret: Vec<f64> =
+            (1..prices_clone.len()).map(|t| prices_clone[t] / prices_clone[t - 1] - 1.0).collect();
 
         // SMA crossover signal
         let sma = |period: usize, from: usize| -> f64 {
@@ -322,13 +327,13 @@ fn ex02_technical_strategy() -> Result<(), AnnealError> {
 
         // RSI computation
         let rsi = |period: usize, from: usize| -> f64 {
-            let gains: f64 = (from - period..from)
-                .map(|t| daily_ret[t].max(0.0))
-                .sum::<f64>() / period as f64;
-            let losses: f64 = (from - period..from)
-                .map(|t| (-daily_ret[t]).max(0.0))
-                .sum::<f64>() / period as f64;
-            if losses < 1e-12 { return 100.0; }
+            let gains: f64 =
+                (from - period..from).map(|t| daily_ret[t].max(0.0)).sum::<f64>() / period as f64;
+            let losses: f64 = (from - period..from).map(|t| (-daily_ret[t]).max(0.0)).sum::<f64>()
+                / period as f64;
+            if losses < 1e-12 {
+                return 100.0;
+            }
             100.0 - 100.0 / (1.0 + gains / losses)
         };
 
@@ -342,17 +347,29 @@ fn ex02_technical_strategy() -> Result<(), AnnealError> {
             let rsi_val = rsi(rsi_p, t);
 
             // Combined signal
-            let trend_signal: f64 = if fast_ma > slow_ma * 1.001 { 1.0 }
-                                    else if fast_ma < slow_ma * 0.999 { -1.0 }
-                                    else { 0.0 };
-            let rsi_signal: f64 = if rsi_val < rsi_lo { 1.0 }
-                                  else if rsi_val > rsi_hi { -1.0 }
-                                  else { 0.0 };
+            let trend_signal: f64 = if fast_ma > slow_ma * 1.001 {
+                1.0
+            } else if fast_ma < slow_ma * 0.999 {
+                -1.0
+            } else {
+                0.0
+            };
+            let rsi_signal: f64 = if rsi_val < rsi_lo {
+                1.0
+            } else if rsi_val > rsi_hi {
+                -1.0
+            } else {
+                0.0
+            };
 
             // Combined: trend must agree with RSI or either is strong
-            let new_pos: f64 = if trend_signal == rsi_signal { trend_signal }
-                               else if trend_signal.abs() > 0.5 && rsi_signal == 0.0 { trend_signal * 0.5 }
-                               else { 0.0 };
+            let new_pos: f64 = if trend_signal == rsi_signal {
+                trend_signal
+            } else if trend_signal.abs() > 0.5 && rsi_signal == 0.0 {
+                trend_signal * 0.5
+            } else {
+                0.0
+            };
 
             // Transaction cost on position change
             let tc = (new_pos - position).abs() * 0.001;
@@ -360,7 +377,9 @@ fn ex02_technical_strategy() -> Result<(), AnnealError> {
             position = new_pos;
         }
 
-        if strategy_rets.is_empty() { return 1e9; }
+        if strategy_rets.is_empty() {
+            return 1e9;
+        }
 
         // Penalise too-short periods (overfitting proxy)
         let complexity_penalty = 0.05 / fast as f64 + 0.02 / rsi_p as f64;
@@ -415,18 +434,18 @@ fn ex02_technical_strategy() -> Result<(), AnnealError> {
 //           optimisation (Two Sigma, Citadel desk tools).
 
 fn ex03_order_execution() -> Result<(), AnnealError> {
-    const BUCKETS: usize = 20;   // execution intervals (e.g. 20 × 15-min buckets)
-    let total_shares  = 1_000_000.0f64; // shares to sell
-    let adv           = 10_000_000.0f64; // average daily volume
-    let price         = 50.0f64;        // current mid-price
-    let sigma_daily   = 0.015f64;       // daily vol (1.5%)
-    let sigma_bucket  = sigma_daily / (BUCKETS as f64).sqrt();
+    const BUCKETS: usize = 20; // execution intervals (e.g. 20 × 15-min buckets)
+    let total_shares = 1_000_000.0f64; // shares to sell
+    let adv = 10_000_000.0f64; // average daily volume
+    let price = 50.0f64; // current mid-price
+    let sigma_daily = 0.015f64; // daily vol (1.5%)
+    let sigma_bucket = sigma_daily / (BUCKETS as f64).sqrt();
 
     // Almgren-Chriss parameters
-    let eta   = 0.1f64;    // permanent impact coefficient
-    let eps   = 0.05f64;   // temporary impact coefficient
-    let gamma = 0.6f64;    // temporary impact concavity (0.5 = square-root law)
-    let lambda = 1e-6f64;  // risk aversion ($ per unit variance)
+    let eta = 0.1f64; // permanent impact coefficient
+    let eps = 0.05f64; // temporary impact coefficient
+    let gamma = 0.6f64; // temporary impact concavity (0.5 = square-root law)
+    let lambda = 1e-6f64; // risk aversion ($ per unit variance)
 
     let energy = FnEnergy(move |raw: &Vec<f64>| {
         let fractions = simplex_project(raw);
@@ -434,7 +453,7 @@ fn ex03_order_execution() -> Result<(), AnnealError> {
 
         let mut perm_impact = 0.0f64;
         let mut temp_impact = 0.0f64;
-        let mut exec_risk   = 0.0f64;
+        let mut exec_risk = 0.0f64;
 
         for &frac in &fractions {
             let n_t = frac * total_shares;
@@ -443,16 +462,14 @@ fn ex03_order_execution() -> Result<(), AnnealError> {
             // Costs in dollar terms
             perm_impact += eta * participation * n_t * price;
             temp_impact += eps * participation.powf(gamma) * n_t * price;
-            exec_risk   += lambda * (remaining * sigma_bucket * price).powi(2);
+            exec_risk += lambda * (remaining * sigma_bucket * price).powi(2);
 
             remaining -= n_t;
         }
         let total_cost = perm_impact + temp_impact + exec_risk;
 
         // Penalty for negative executions (can't buy while liquidating)
-        let neg_penalty: f64 = raw.iter()
-            .map(|&x| (-x).max(0.0) * 1e8)
-            .sum();
+        let neg_penalty: f64 = raw.iter().map(|&x| (-x).max(0.0) * 1e8).sum();
 
         total_cost + neg_penalty
     });
@@ -462,8 +479,8 @@ fn ex03_order_execution() -> Result<(), AnnealError> {
     let twap_cost = {
         let n_t = total_shares / BUCKETS as f64;
         let participation = n_t / adv;
-        let perm  = BUCKETS as f64 * eta * participation * n_t * price;
-        let temp  = BUCKETS as f64 * eps * participation.powf(gamma) * n_t * price;
+        let perm = BUCKETS as f64 * eta * participation * n_t * price;
+        let temp = BUCKETS as f64 * eps * participation.powf(gamma) * n_t * price;
         perm + temp
     };
 
@@ -528,12 +545,14 @@ fn ex04_pairs_trading() -> Result<(), AnnealError> {
     let spread_clone = spread.clone();
 
     let energy = FnEnergy(move |params: &Vec<f64>| {
-        let entry_z  = params[0].abs().clamp(0.5, 4.0);
-        let exit_z   = params[1].abs().clamp(0.0, entry_z - 0.1);
-        let stop_z   = params[2].abs().clamp(entry_z + 0.1, 8.0);
+        let entry_z = params[0].abs().clamp(0.5, 4.0);
+        let exit_z = params[1].abs().clamp(0.0, entry_z - 0.1);
+        let stop_z = params[2].abs().clamp(entry_z + 0.1, 8.0);
         let lookback = (params[3].abs() as usize).clamp(10, 60);
 
-        if lookback + 5 >= spread_clone.len() { return 1e9; }
+        if lookback + 5 >= spread_clone.len() {
+            return 1e9;
+        }
 
         let mut rets = Vec::new();
         let mut position = 0.0f64; // +1 = long spread, -1 = short spread, 0 = flat
@@ -544,7 +563,9 @@ fn ex04_pairs_trading() -> Result<(), AnnealError> {
             let window = &spread_clone[t - lookback..t];
             let mu = mean(window);
             let sd = std_dev(window);
-            if sd < 1e-10 { continue; }
+            if sd < 1e-10 {
+                continue;
+            }
 
             let z = (spread_clone[t] - mu) / sd;
             let mut daily_pnl;
@@ -574,7 +595,9 @@ fn ex04_pairs_trading() -> Result<(), AnnealError> {
             rets.push(daily_pnl);
         }
 
-        if rets.is_empty() { return 1e9; }
+        if rets.is_empty() {
+            return 1e9;
+        }
 
         // Information Ratio (Sharpe without the risk-free adjustment)
         let ir = sharpe(&rets);
@@ -631,7 +654,8 @@ fn ex05_risk_parity() -> Result<(), AnnealError> {
         for j in 0..N {
             cov[i][j] = (0..T)
                 .map(|t| (rets[i][t] - asset_means[i]) * (rets[j][t] - asset_means[j]))
-                .sum::<f64>() / T as f64;
+                .sum::<f64>()
+                / T as f64;
         }
     }
 
@@ -639,15 +663,14 @@ fn ex05_risk_parity() -> Result<(), AnnealError> {
         let w = simplex_project(raw);
 
         // Portfolio variance
-        let port_var: f64 = (0..N)
-            .map(|i| (0..N).map(|j| w[i] * w[j] * cov[i][j]).sum::<f64>())
-            .sum();
-        if port_var < 1e-20 { return 1e9; }
+        let port_var: f64 =
+            (0..N).map(|i| (0..N).map(|j| w[i] * w[j] * cov[i][j]).sum::<f64>()).sum();
+        if port_var < 1e-20 {
+            return 1e9;
+        }
 
         // Marginal contribution to risk for each asset: (Σw)_i
-        let mcr: Vec<f64> = (0..N)
-            .map(|i| (0..N).map(|j| cov[i][j] * w[j]).sum::<f64>())
-            .collect();
+        let mcr: Vec<f64> = (0..N).map(|i| (0..N).map(|j| cov[i][j] * w[j]).sum::<f64>()).collect();
 
         // Risk contribution: RC_i = w_i * MCR_i / port_vol
         let port_vol = port_var.sqrt();
@@ -662,9 +685,7 @@ fn ex05_risk_parity() -> Result<(), AnnealError> {
             .sum();
 
         // Concentration penalty (no single asset > 40%)
-        let concentration: f64 = w.iter()
-            .map(|&wi| (wi - 0.4).max(0.0) * 100.0)
-            .sum();
+        let concentration: f64 = w.iter().map(|&wi| (wi - 0.4).max(0.0) * 100.0).sum();
 
         rc_dev * 1000.0 + concentration
     });
@@ -729,15 +750,39 @@ fn ex06_regime_switching() -> Result<(), AnnealError> {
             // Regime transition (Markov chain)
             let r = rng.next_f64();
             regime = match regime {
-                0 => if r < 0.97 { 0 } else if r < 0.99 { 1 } else { 2 },
-                1 => if r < 0.93 { 1 } else if r < 0.98 { 2 } else { 0 },
-                _ => if r < 0.90 { 2 } else if r < 0.95 { 1 } else { 0 },
+                0 => {
+                    if r < 0.97 {
+                        0
+                    } else if r < 0.99 {
+                        1
+                    } else {
+                        2
+                    }
+                }
+                1 => {
+                    if r < 0.93 {
+                        1
+                    } else if r < 0.98 {
+                        2
+                    } else {
+                        0
+                    }
+                }
+                _ => {
+                    if r < 0.90 {
+                        2
+                    } else if r < 0.95 {
+                        1
+                    } else {
+                        0
+                    }
+                }
             };
 
             let (eq_drift, eq_vol, vx_drift, vx_vol, bd_drift) = match regime {
-                0 => (0.0008,  0.010, -0.003, 0.020, 0.0001), // bull
-                1 => (-0.0010, 0.018,  0.005, 0.040, 0.0004), // bear
-                _ => (0.0000,  0.025,  0.008, 0.060, 0.0002), // high_vol
+                0 => (0.0008, 0.010, -0.003, 0.020, 0.0001), // bull
+                1 => (-0.0010, 0.018, 0.005, 0.040, 0.0004), // bear
+                _ => (0.0000, 0.025, 0.008, 0.060, 0.0002),  // high_vol
             };
 
             eq_rets.push(eq_drift + eq_vol * normal_sample(&mut rng));
@@ -748,24 +793,25 @@ fn ex06_regime_switching() -> Result<(), AnnealError> {
     };
 
     let energy = FnEnergy(move |params: &Vec<f64>| {
-        let bull_thresh  = params[0].clamp(0.001, 0.05); // 50d return > this → bull
-        let bear_thresh  = params[1].clamp(-0.05, -0.001);
-        let vol_thresh   = params[2].clamp(0.005, 0.03); // 20d rv > this → high_vol
-        let persist      = (params[3].abs() as usize).clamp(1, 10); // regime confirmation days
+        let bull_thresh = params[0].clamp(0.001, 0.05); // 50d return > this → bull
+        let bear_thresh = params[1].clamp(-0.05, -0.001);
+        let vol_thresh = params[2].clamp(0.005, 0.03); // 20d rv > this → high_vol
+        let persist = (params[3].abs() as usize).clamp(1, 10); // regime confirmation days
 
         let lookback_trend = 50usize;
-        let lookback_vol   = 20usize;
+        let lookback_vol = 20usize;
         let warmup = lookback_trend + persist;
-        if warmup >= T { return 1e9; }
+        if warmup >= T {
+            return 1e9;
+        }
 
         // Pre-compute signals
         let trend_50: Vec<f64> = (lookback_trend..T)
             .map(|t| equity_rets[t - lookback_trend..t].iter().sum::<f64>())
             .collect();
 
-        let rv_20: Vec<f64> = (lookback_vol..T)
-            .map(|t| std_dev(&equity_rets[t - lookback_vol..t]))
-            .collect();
+        let rv_20: Vec<f64> =
+            (lookback_vol..T).map(|t| std_dev(&equity_rets[t - lookback_vol..t])).collect();
 
         let mut strat_rets = Vec::new();
         let mut current_regime = 0usize;
@@ -775,15 +821,23 @@ fn ex06_regime_switching() -> Result<(), AnnealError> {
             let trend = trend_50[t - lookback_trend];
             let rv = rv_20[t - lookback_vol];
 
-            let raw_regime = if rv > vol_thresh { 2 }
-                             else if trend > bull_thresh { 0 }
-                             else if trend < bear_thresh { 1 }
-                             else { current_regime };
+            let raw_regime = if rv > vol_thresh {
+                2
+            } else if trend > bull_thresh {
+                0
+            } else if trend < bear_thresh {
+                1
+            } else {
+                current_regime
+            };
 
             // Regime persistence: only switch after persist consecutive signals
             if raw_regime != current_regime {
                 signal_count += 1;
-                if signal_count >= persist { current_regime = raw_regime; signal_count = 0; }
+                if signal_count >= persist {
+                    current_regime = raw_regime;
+                    signal_count = 0;
+                }
             } else {
                 signal_count = 0;
             }
@@ -796,13 +850,13 @@ fn ex06_regime_switching() -> Result<(), AnnealError> {
             };
 
             // Daily P&L (simplified: no rebalancing cost)
-            let daily = w_eq * equity_rets[t]
-                      + w_vx * vol_rets[t]
-                      + w_bd * bond_rets[t];
+            let daily = w_eq * equity_rets[t] + w_vx * vol_rets[t] + w_bd * bond_rets[t];
             strat_rets.push(daily);
         }
 
-        if strat_rets.is_empty() { return 1e9; }
+        if strat_rets.is_empty() {
+            return 1e9;
+        }
         -sharpe(&strat_rets) + max_drawdown(&strat_rets) * 2.0 // penalise drawdown
     });
 
@@ -847,18 +901,17 @@ fn ex06_regime_switching() -> Result<(), AnnealError> {
 // Real use: multi-strategy hedge funds, crypto quant books, portfolio of signals.
 
 fn ex07_kelly_multistrategy() -> Result<(), AnnealError> {
-    const K: usize = 6;  // strategies
+    const K: usize = 6; // strategies
     const T: usize = 252;
 
     // Synthetic strategy returns (each has different Sharpe, correlation)
     let strat_rets: Vec<Vec<f64>> = {
         let mut rng = Xoshiro256PlusPlus::from_seed(7_001);
         let sharpes = [1.2, 0.8, 1.5, 0.6, 1.0, 0.9f64];
-        let vols    = [0.08, 0.12, 0.06, 0.15, 0.10, 0.11f64];
+        let vols = [0.08, 0.12, 0.06, 0.15, 0.10, 0.11f64];
         let daily_vol: Vec<f64> = vols.iter().map(|&v| v / (252.0f64).sqrt()).collect();
-        let daily_mu:  Vec<f64> = sharpes.iter().zip(daily_vol.iter())
-            .map(|(&sr, &dv)| sr * dv)
-            .collect();
+        let daily_mu: Vec<f64> =
+            sharpes.iter().zip(daily_vol.iter()).map(|(&sr, &dv)| sr * dv).collect();
 
         // Correlation factor (common market factor)
         let beta = [0.3, 0.5, 0.1, 0.6, 0.4, 0.2f64];
@@ -867,35 +920,35 @@ fn ex07_kelly_multistrategy() -> Result<(), AnnealError> {
         for _ in 0..T {
             let mkt = normal_sample(&mut rng) * 0.01;
             for s in 0..K {
-                let idio = normal_sample(&mut rng) * daily_vol[s] * (1.0 - beta[s] * beta[s]).sqrt();
+                let idio =
+                    normal_sample(&mut rng) * daily_vol[s] * (1.0 - beta[s] * beta[s]).sqrt();
                 all[s].push(daily_mu[s] + beta[s] * mkt + idio);
             }
         }
         all
     };
 
-    let max_gross  = 2.0f64; // max gross leverage
-    let max_net    = 0.5f64; // max net long
-    let kelly_pen  = 10.0f64;
+    let max_gross = 2.0f64; // max gross leverage
+    let max_net = 0.5f64; // max net long
+    let kelly_pen = 10.0f64;
 
     let energy = FnEnergy(move |fracs: &Vec<f64>| {
         // Kelly objective: E[log(1 + Σ f_i r_i)]
         let log_wealth: f64 = (0..T)
             .map(|t| {
-                let portfolio_ret: f64 = fracs.iter()
-                    .zip(strat_rets.iter())
-                    .map(|(&f, s)| f * s[t])
-                    .sum();
+                let portfolio_ret: f64 =
+                    fracs.iter().zip(strat_rets.iter()).map(|(&f, s)| f * s[t]).sum();
                 // Guard against ruin (log is undefined at ≤ -1)
                 (1.0 + portfolio_ret).max(0.01).ln()
             })
-            .sum::<f64>() / T as f64;
+            .sum::<f64>()
+            / T as f64;
 
         // Constraints
         let gross_lev: f64 = fracs.iter().map(|&f| f.abs()).sum();
-        let net_lev:   f64 = fracs.iter().sum::<f64>();
+        let net_lev: f64 = fracs.iter().sum::<f64>();
         let leverage_pen = kelly_pen * (gross_lev - max_gross).max(0.0).powi(2);
-        let net_pen      = kelly_pen * (net_lev.abs() - max_net).max(0.0).powi(2);
+        let net_pen = kelly_pen * (net_lev.abs() - max_net).max(0.0).powi(2);
 
         -log_wealth + leverage_pen + net_pen
     });
@@ -913,7 +966,7 @@ fn ex07_kelly_multistrategy() -> Result<(), AnnealError> {
         .run(initial);
 
     let gross: f64 = result.best_state.iter().map(|&f| f.abs()).sum();
-    let net:   f64 = result.best_state.iter().sum::<f64>();
+    let net: f64 = result.best_state.iter().sum::<f64>();
 
     println!(
         "[07] Kelly Multi-Strat  log_ret={:.4}/day  gross={:.2}x  net={:.2}x  accept={:.1}%",
@@ -948,13 +1001,14 @@ fn ex08_market_making() -> Result<(), AnnealError> {
     const T: usize = 10_000; // ticks in simulation
 
     // Simulate order flow: fraction of trades are informed (adverse selection)
-    let order_flow: Vec<(bool, f64)> = { // (is_buy, is_informed)
+    let order_flow: Vec<(bool, f64)> = {
+        // (is_buy, is_informed)
         let mut rng = Xoshiro256PlusPlus::from_seed(8_001);
         (0..T)
             .map(|_| {
-                let is_buy      = rng.next_f64() < 0.5;
+                let is_buy = rng.next_f64() < 0.5;
                 let _is_informed = rng.next_f64() < 0.15; // 15% informed traders (consumed for RNG advance)
-                let price_move  = normal_sample(&mut rng) * 0.1; // mid-price moves
+                let price_move = normal_sample(&mut rng) * 0.1; // mid-price moves
                 (is_buy, price_move)
             })
             .collect()
@@ -962,9 +1016,9 @@ fn ex08_market_making() -> Result<(), AnnealError> {
     let sigma_tick = 0.1f64; // mid-price vol per tick (ticks)
 
     let energy = FnEnergy(move |params: &Vec<f64>| {
-        let half_spread  = params[0].abs().clamp(0.1, 5.0);  // ticks
-        let inv_limit    = params[1].abs().clamp(1.0, 20.0); // max inventory
-        let skew_factor  = params[2].abs().clamp(0.0, 1.0);  // [0,1]
+        let half_spread = params[0].abs().clamp(0.1, 5.0); // ticks
+        let inv_limit = params[1].abs().clamp(1.0, 20.0); // max inventory
+        let skew_factor = params[2].abs().clamp(0.0, 1.0); // [0,1]
         let fill_prob_base = params[3].abs().clamp(0.1, 0.9); // base fill prob
 
         let mut inventory = 0.0f64;
@@ -1015,7 +1069,9 @@ fn ex08_market_making() -> Result<(), AnnealError> {
         }
 
         // Normalise by trade count
-        if n_trades == 0 { return 1e9; }
+        if n_trades == 0 {
+            return 1e9;
+        }
         -(pnl / T as f64) * 10_000.0 // in bps
     });
 
@@ -1068,7 +1124,7 @@ fn ex09_momentum_combination() -> Result<(), AnnealError> {
     // Generate synthetic multi-asset returns with momentum structure
     let returns: Vec<Vec<f64>> = {
         let mut rng = Xoshiro256PlusPlus::from_seed(9_001);
-        let vols   = [0.012, 0.006, 0.018, 0.015, 0.010, 0.013f64]; // daily
+        let vols = [0.012, 0.006, 0.018, 0.015, 0.010, 0.013f64]; // daily
         let drifts = [0.0003, 0.0001, 0.0002, -0.0001, 0.0002, 0.0001f64];
         let momentum_strength = [0.04, 0.06, 0.03, 0.05, 0.04, 0.05f64]; // autocorrelation
 
@@ -1102,10 +1158,13 @@ fn ex09_momentum_combination() -> Result<(), AnnealError> {
             // Compute blended signal for each asset
             let signals: Vec<f64> = (0..N_ASSETS)
                 .map(|i| {
-                    let raw_sig: f64 = hw.iter()
+                    let raw_sig: f64 = hw
+                        .iter()
                         .zip(horizons.iter())
                         .map(|(&w, &h)| {
-                            if t < h { return 0.0; }
+                            if t < h {
+                                return 0.0;
+                            }
                             let horizon_ret: f64 = returns[i][t - h..t].iter().sum();
                             w * horizon_ret.signum()
                         })
@@ -1119,27 +1178,25 @@ fn ex09_momentum_combination() -> Result<(), AnnealError> {
             let positions: Vec<f64> = signals.iter().map(|&s| s / sig_norm).collect();
 
             // Daily P&L
-            let daily: f64 = positions.iter()
-                .zip(returns.iter())
-                .map(|(&pos, r)| pos * r[t])
-                .sum();
+            let daily: f64 = positions.iter().zip(returns.iter()).map(|(&pos, r)| pos * r[t]).sum();
 
             // Turnover cost (blended across horizons)
-            let turnover: f64 = positions.iter()
+            let turnover: f64 = positions
+                .iter()
                 .zip(prev_positions.iter())
                 .map(|(&p, &pp)| (p - pp).abs())
                 .sum::<f64>();
-            let tc: f64 = hw.iter()
-                .zip(turnover_costs.iter())
-                .map(|(&w, &tc)| w.abs() * tc)
-                .sum::<f64>()
-                * turnover;
+            let tc: f64 =
+                hw.iter().zip(turnover_costs.iter()).map(|(&w, &tc)| w.abs() * tc).sum::<f64>()
+                    * turnover;
 
             strategy_rets.push(daily - tc);
             prev_positions = positions;
         }
 
-        if strategy_rets.is_empty() { return 1e9; }
+        if strategy_rets.is_empty() {
+            return 1e9;
+        }
         -sharpe(&strategy_rets)
     });
 
@@ -1161,7 +1218,12 @@ fn ex09_momentum_combination() -> Result<(), AnnealError> {
     println!(
         "[09] Momentum Combo  sharpe={:.3}  w=[{:.2},{:.2},{:.2},{:.2},{:.2},{:.2}]  accept={:.1}%",
         -result.best_energy,
-        final_w[0], final_w[1], final_w[2], final_w[3], final_w[4], final_w[5],
+        final_w[0],
+        final_w[1],
+        final_w[2],
+        final_w[3],
+        final_w[4],
+        final_w[5],
         result.diagnostics.acceptance_rate() * 100.0
     );
     Ok(())
@@ -1194,13 +1256,11 @@ fn ex10_cvar_portfolio() -> Result<(), AnnealError> {
     let asset_means_report = asset_means.clone();
 
     // Scenario matrix: row = day, col = asset return
-    let scenarios: Vec<Vec<f64>> = (0..T)
-        .map(|t| (0..N).map(|i| rets[i][t]).collect())
-        .collect();
+    let scenarios: Vec<Vec<f64>> = (0..T).map(|t| (0..N).map(|i| rets[i][t]).collect()).collect();
     let scenarios_report = scenarios.clone();
 
-    let cvar_budget = 0.02f64;  // 2% daily CVaR at 95% confidence
-    let lambda      = 500.0f64; // hard constraint penalty weight
+    let cvar_budget = 0.02f64; // 2% daily CVaR at 95% confidence
+    let lambda = 500.0f64; // hard constraint penalty weight
 
     // ESG scores: each asset has a score 0-10; require portfolio score ≥ 6
     let esg_scores: [f64; N] = [8.0, 5.0, 7.0, 9.0, 4.0, 6.0, 8.0, 3.0, 7.0, 9.0, 6.0, 5.0];
@@ -1210,13 +1270,11 @@ fn ex10_cvar_portfolio() -> Result<(), AnnealError> {
         let w = simplex_project(raw);
 
         // Expected annualised return
-        let port_ret: f64 = w.iter()
-            .zip(asset_means.iter())
-            .map(|(wi, ri)| wi * ri)
-            .sum();
+        let port_ret: f64 = w.iter().zip(asset_means.iter()).map(|(wi, ri)| wi * ri).sum();
 
         // Historical CVaR: sort portfolio scenario returns, take worst 5%
-        let mut port_scenario_rets: Vec<f64> = scenarios.iter()
+        let mut port_scenario_rets: Vec<f64> = scenarios
+            .iter()
             .map(|day| w.iter().zip(day.iter()).map(|(wi, ri)| wi * ri).sum())
             .collect();
         port_scenario_rets.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -1228,16 +1286,11 @@ fn ex10_cvar_portfolio() -> Result<(), AnnealError> {
         let cvar_penalty = lambda * (portfolio_cvar - cvar_budget).max(0.0).powi(2);
 
         // ESG constraint: weighted average score ≥ esg_min
-        let port_esg: f64 = w.iter()
-            .zip(esg_scores.iter())
-            .map(|(wi, si)| wi * si)
-            .sum();
+        let port_esg: f64 = w.iter().zip(esg_scores.iter()).map(|(wi, si)| wi * si).sum();
         let esg_penalty = lambda * (esg_min - port_esg).max(0.0).powi(2);
 
         // Concentration: no single asset > 25%
-        let conc_penalty: f64 = w.iter()
-            .map(|&wi| lambda * (wi - 0.25).max(0.0).powi(2))
-            .sum();
+        let conc_penalty: f64 = w.iter().map(|&wi| lambda * (wi - 0.25).max(0.0).powi(2)).sum();
 
         -port_ret + cvar_penalty + esg_penalty + conc_penalty
     });
@@ -1258,7 +1311,8 @@ fn ex10_cvar_portfolio() -> Result<(), AnnealError> {
 
     // Report key metrics
     let port_ret: f64 = w.iter().zip(asset_means_report.iter()).map(|(wi, ri)| wi * ri).sum();
-    let mut sc_rets: Vec<f64> = scenarios_report.iter()
+    let mut sc_rets: Vec<f64> = scenarios_report
+        .iter()
         .map(|day| w.iter().zip(day.iter()).map(|(wi, ri)| wi * ri).sum())
         .collect();
     sc_rets.sort_by(|a, b| a.partial_cmp(b).unwrap());

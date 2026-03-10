@@ -341,9 +341,8 @@ fn h07d_hybrid_competitive() {
         let (_, qia_e) = run_qia(&landscape, &mv, iterations, qia_width, initial, seed);
         qia_energies.push(qia_e);
 
-        let (_, hybrid_e) = run_hybrid(
-            &landscape, &mv, &schedule, iterations, qia_width, initial, seed,
-        );
+        let (_, hybrid_e) =
+            run_hybrid(&landscape, &mv, &schedule, iterations, qia_width, initial, seed);
         hybrid_energies.push(hybrid_e);
     }
 

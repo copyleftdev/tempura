@@ -51,11 +51,14 @@ fn h06a_free_energy_error_scaling() {
             let result = population::builder::<i64>()
                 .objective(well.clone())
                 .moves(mv.clone())
-                .geometric_cooling(t_high, t_low, num_steps).unwrap()
-                .population_size(pop_size).unwrap()
+                .geometric_cooling(t_high, t_low, num_steps)
+                .unwrap()
+                .population_size(pop_size)
+                .unwrap()
                 .sweeps_per_step(10)
                 .seed(seed)
-                .build().unwrap()
+                .build()
+                .unwrap()
                 .run(20); // start at center
 
             estimates.push(result.log_partition_ratio);
@@ -71,7 +74,8 @@ fn h06a_free_energy_error_scaling() {
     assert!(
         std_devs[2] < std_devs[0],
         "H-06a FAILED: N=800 std dev ({:.4}) not less than N=50 ({:.4})",
-        std_devs[2], std_devs[0]
+        std_devs[2],
+        std_devs[0]
     );
 
     // 16x increase in N (50→800) should reduce std dev by ~4x (1/√N)
@@ -81,7 +85,9 @@ fn h06a_free_energy_error_scaling() {
         assert!(
             ratio < 0.60,
             "H-06a FAILED: N=50→800 std dev ratio {:.2} > 0.60 (σ: {:.4}, {:.4})",
-            ratio, std_devs[0], std_devs[2]
+            ratio,
+            std_devs[0],
+            std_devs[2]
         );
     }
 }
@@ -110,11 +116,14 @@ fn h06b_effective_fraction_gentle_vs_aggressive() {
         let result = population::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_cooling(50.0, 1.0, 100).unwrap()
-            .population_size(500).unwrap()
+            .geometric_cooling(50.0, 1.0, 100)
+            .unwrap()
+            .population_size(500)
+            .unwrap()
             .sweeps_per_step(10)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(10);
 
         let min_rho = result
@@ -131,11 +140,14 @@ fn h06b_effective_fraction_gentle_vs_aggressive() {
         let result = population::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_cooling(50.0, 1.0, 5).unwrap()
-            .population_size(500).unwrap()
+            .geometric_cooling(50.0, 1.0, 5)
+            .unwrap()
+            .population_size(500)
+            .unwrap()
             .sweeps_per_step(10)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(10);
 
         let min_rho = result
@@ -161,7 +173,8 @@ fn h06b_effective_fraction_gentle_vs_aggressive() {
     assert!(
         aggressive_mean < gentle_mean,
         "H-06b FAILED: aggressive ρ ({:.3}) not less than gentle ρ ({:.3})",
-        aggressive_mean, gentle_mean
+        aggressive_mean,
+        gentle_mean
     );
 }
 
@@ -193,11 +206,14 @@ fn h06c_pa_competitive_with_pt() {
         let pa_result = population::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_cooling(30.0, 0.5, 20).unwrap()
-            .population_size(200).unwrap()
+            .geometric_cooling(30.0, 0.5, 20)
+            .unwrap()
+            .population_size(200)
+            .unwrap()
             .sweeps_per_step(50)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(0);
         pa_energies.push(pa_result.best_energy);
 
@@ -205,11 +221,13 @@ fn h06c_pa_competitive_with_pt() {
         let pt_result = tempura::parallel::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_temperatures(0.5, 30.0, 4).unwrap()
+            .geometric_temperatures(0.5, 30.0, 4)
+            .unwrap()
             .iterations(50_000)
             .swap_interval(10)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(0);
         pt_energies.push(pt_result.best_energy);
     }
@@ -224,7 +242,8 @@ fn h06c_pa_competitive_with_pt() {
     assert!(
         pa_median <= pt_median + 5.0,
         "H-06c FAILED: PA median ({:.2}) much worse than PT median ({:.2})",
-        pa_median, pt_median
+        pa_median,
+        pt_median
     );
 }
 
@@ -242,11 +261,14 @@ fn h06d_deterministic_reproducibility() {
         population::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .geometric_cooling(50.0, 1.0, 30).unwrap()
-            .population_size(100).unwrap()
+            .geometric_cooling(50.0, 1.0, 30)
+            .unwrap()
+            .population_size(100)
+            .unwrap()
             .sweeps_per_step(10)
             .seed(seed)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(10)
     };
 
@@ -277,11 +299,14 @@ fn h06_diagnostics_structure() {
     let result = population::builder::<i64>()
         .objective(well.clone())
         .moves(mv.clone())
-        .geometric_cooling(50.0, 1.0, num_steps).unwrap()
-        .population_size(200).unwrap()
+        .geometric_cooling(50.0, 1.0, num_steps)
+        .unwrap()
+        .population_size(200)
+        .unwrap()
         .sweeps_per_step(10)
         .seed(42)
-        .build().unwrap()
+        .build()
+        .unwrap()
         .run(10);
 
     // num_steps - 1 transitions
@@ -292,7 +317,8 @@ fn h06_diagnostics_structure() {
         assert!(
             w[1].temperature < w[0].temperature,
             "temperature should decrease: {} -> {}",
-            w[0].temperature, w[1].temperature
+            w[0].temperature,
+            w[1].temperature
         );
     }
 

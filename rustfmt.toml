@@ -2,25 +2,11 @@ edition = "2021"
 max_width = 100
 use_small_heuristics = "Max"
 
-# Import organisation
-imports_granularity = "Crate"
-group_imports = "StdExternalCrate"
+# Import ordering
 reorder_imports = true
 reorder_modules = true
-
-# Trailing commas
-trailing_comma = "Vertical"
-trailing_semicolon = true
-
-# Comments
-wrap_comments = true
-comment_width = 100
-normalize_comments = true
-normalize_doc_attributes = true
 
 # Misc
 newline_style = "Unix"
 use_field_init_shorthand = true
 use_try_shorthand = true
-format_strings = false      # keep hand-formatted string alignment
-format_macro_matchers = true

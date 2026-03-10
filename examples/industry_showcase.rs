@@ -56,11 +56,26 @@ fn main() -> Result<(), AnnealError> {
 fn ex01_logistics() -> Result<(), AnnealError> {
     // 20-city instance — coordinates in a unit square
     let cities: Vec<(f64, f64)> = vec![
-        (0.37, 0.93), (0.15, 0.42), (0.73, 0.11), (0.58, 0.68),
-        (0.21, 0.77), (0.89, 0.54), (0.44, 0.29), (0.62, 0.85),
-        (0.09, 0.61), (0.78, 0.32), (0.33, 0.14), (0.51, 0.47),
-        (0.95, 0.76), (0.27, 0.55), (0.66, 0.19), (0.84, 0.63),
-        (0.12, 0.38), (0.47, 0.91), (0.71, 0.44), (0.39, 0.72),
+        (0.37, 0.93),
+        (0.15, 0.42),
+        (0.73, 0.11),
+        (0.58, 0.68),
+        (0.21, 0.77),
+        (0.89, 0.54),
+        (0.44, 0.29),
+        (0.62, 0.85),
+        (0.09, 0.61),
+        (0.78, 0.32),
+        (0.33, 0.14),
+        (0.51, 0.47),
+        (0.95, 0.76),
+        (0.27, 0.55),
+        (0.66, 0.19),
+        (0.84, 0.63),
+        (0.12, 0.38),
+        (0.47, 0.91),
+        (0.71, 0.44),
+        (0.39, 0.72),
     ];
 
     let cities_clone = cities.clone();
@@ -120,9 +135,24 @@ fn ex02_semiconductor() -> Result<(), AnnealError> {
 
     // Netlist: list of (cell_a, cell_b) connections
     let netlist: Vec<(usize, usize)> = vec![
-        (0, 1), (0, 4), (1, 2), (1, 5), (2, 3), (2, 6),
-        (3, 7), (4, 5), (4, 8), (5, 6), (6, 7), (7, 11),
-        (8, 9), (9, 10), (10, 11), (11, 15), (12, 13), (13, 14),
+        (0, 1),
+        (0, 4),
+        (1, 2),
+        (1, 5),
+        (2, 3),
+        (2, 6),
+        (3, 7),
+        (4, 5),
+        (4, 8),
+        (5, 6),
+        (6, 7),
+        (7, 11),
+        (8, 9),
+        (9, 10),
+        (10, 11),
+        (11, 15),
+        (12, 13),
+        (13, 14),
     ];
     let netlist_clone = netlist.clone();
 
@@ -175,7 +205,7 @@ fn ex03_finance() -> Result<(), AnnealError> {
     // 8 assets: [expected_return, volatility, correlation_row...]
     // Simplified: diagonal covariance (uncorrelated assets)
     let returns = [0.12, 0.08, 0.15, 0.06, 0.10, 0.18, 0.05, 0.13f64];
-    let vols    = [0.20, 0.12, 0.30, 0.08, 0.16, 0.35, 0.06, 0.22f64];
+    let vols = [0.20, 0.12, 0.30, 0.08, 0.16, 0.35, 0.06, 0.22f64];
     let risk_free = 0.03f64;
 
     let sharpe_neg = FnEnergy(move |raw_w: &Vec<f64>| {
@@ -232,19 +262,16 @@ fn ex03_finance() -> Result<(), AnnealError> {
 fn ex04_energy() -> Result<(), AnnealError> {
     // 6 generators: [min_mw, max_mw, a (quadratic), b (linear), c (fixed)]
     // Cost = a·P² + b·P + c  ($/h)
-    let gen_min  = [10.0f64, 20.0, 15.0, 10.0, 25.0, 20.0];
-    let gen_max  = [85.0f64, 80.0, 70.0, 60.0, 100.0, 90.0];
-    let a        = [0.0070f64, 0.0095, 0.0090, 0.0090, 0.0080, 0.0075];
-    let b        = [7.0f64, 10.0, 8.5, 11.0, 10.5, 12.0];
-    let c        = [240.0f64, 200.0, 220.0, 200.0, 220.0, 190.0];
-    let demand   = 300.0f64; // total MW demand
+    let gen_min = [10.0f64, 20.0, 15.0, 10.0, 25.0, 20.0];
+    let gen_max = [85.0f64, 80.0, 70.0, 60.0, 100.0, 90.0];
+    let a = [0.0070f64, 0.0095, 0.0090, 0.0090, 0.0080, 0.0075];
+    let b = [7.0f64, 10.0, 8.5, 11.0, 10.5, 12.0];
+    let c = [240.0f64, 200.0, 220.0, 200.0, 220.0, 190.0];
+    let demand = 300.0f64; // total MW demand
 
     let cost_fn = FnEnergy(move |output: &Vec<f64>| {
-        let fuel_cost: f64 = output
-            .iter()
-            .enumerate()
-            .map(|(i, &p)| a[i] * p * p + b[i] * p + c[i])
-            .sum();
+        let fuel_cost: f64 =
+            output.iter().enumerate().map(|(i, &p)| a[i] * p * p + b[i] * p + c[i]).sum();
         let total_mw: f64 = output.iter().sum();
         let mismatch_penalty = 1e4 * (total_mw - demand).powi(2);
         // Constraint penalty: generators outside [min, max]
@@ -261,11 +288,8 @@ fn ex04_energy() -> Result<(), AnnealError> {
     });
 
     // Initial: each generator at midpoint
-    let initial: Vec<f64> = gen_min
-        .iter()
-        .zip(gen_max.iter())
-        .map(|(lo, hi)| (lo + hi) / 2.0)
-        .collect();
+    let initial: Vec<f64> =
+        gen_min.iter().zip(gen_max.iter()).map(|(lo, hi)| (lo + hi) / 2.0).collect();
 
     let result = Annealer::builder()
         .objective(cost_fn)
@@ -312,13 +336,31 @@ impl MoveOperator<Vec<usize>> for ChannelMove {
 
 fn ex05_telecom() -> Result<(), AnnealError> {
     const N: usize = 12; // base stations
-    const F: usize = 6;  // available frequency channels
+    const F: usize = 6; // available frequency channels
 
     // Interference graph: pairs of adjacent base stations
     let adj: Vec<(usize, usize)> = vec![
-        (0,1),(0,2),(1,2),(1,3),(2,3),(2,4),(3,4),(3,5),
-        (4,5),(4,6),(5,6),(5,7),(6,7),(6,8),(7,8),(7,9),
-        (8,9),(8,10),(9,10),(9,11),(10,11),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (1, 3),
+        (2, 3),
+        (2, 4),
+        (3, 4),
+        (3, 5),
+        (4, 5),
+        (4, 6),
+        (5, 6),
+        (5, 7),
+        (6, 7),
+        (6, 8),
+        (7, 8),
+        (7, 9),
+        (8, 9),
+        (8, 10),
+        (9, 10),
+        (9, 11),
+        (10, 11),
     ];
     let adj_clone = adj.clone();
 
@@ -328,7 +370,13 @@ fn ex05_telecom() -> Result<(), AnnealError> {
             .map(|&(a, b)| {
                 let diff = channels[a].abs_diff(channels[b]) as f64;
                 // Same channel = 10, adjacent channel = 3, else 0
-                if diff == 0.0 { 10.0 } else if diff == 1.0 { 3.0 } else { 0.0 }
+                if diff == 0.0 {
+                    10.0
+                } else if diff == 1.0 {
+                    3.0
+                } else {
+                    0.0
+                }
             })
             .sum::<f64>()
     });
@@ -383,10 +431,7 @@ impl MoveOperator<Vec<i8>> for FoldMove {
 fn ex06_bioinformatics() -> Result<(), AnnealError> {
     // Classic HP sequence (H=hydrophobic, P=polar)
     // "HPHPPHHPHPPHPHHPPHPH" — 20-mer
-    let sequence: Vec<bool> = "HPHPPHHPHPPHPHHPPHPH"
-        .chars()
-        .map(|c| c == 'H')
-        .collect();
+    let sequence: Vec<bool> = "HPHPPHHPHPPHPHHPPHPH".chars().map(|c| c == 'H').collect();
     let n = sequence.len();
     let seq_clone = sequence.clone();
 
@@ -466,9 +511,9 @@ fn ex07_manufacturing() -> Result<(), AnnealError> {
 
     // processing_time[machine][job] in time units
     let pt = [
-        [3u64, 2, 5, 1, 4],  // machine 0
-        [4, 3, 2, 5, 1],     // machine 1
-        [2, 5, 3, 4, 2],     // machine 2
+        [3u64, 2, 5, 1, 4], // machine 0
+        [4, 3, 2, 5, 1],    // machine 1
+        [2, 5, 3, 4, 2],    // machine 2
     ];
 
     // Simplified makespan: sum of weighted completion times on each machine
@@ -554,7 +599,8 @@ fn ex08_aerospace() -> Result<(), AnnealError> {
 
     // Current orbital positions (in degrees) and target slot positions
     let current_pos: [f64; N_SATS] = [10.0, 45.0, 80.0, 120.0, 160.0, 200.0, 250.0, 310.0];
-    let slot_pos: [f64; N_SLOTS]   = [0.0, 36.0, 72.0, 108.0, 144.0, 180.0, 216.0, 252.0, 288.0, 324.0];
+    let slot_pos: [f64; N_SLOTS] =
+        [0.0, 36.0, 72.0, 108.0, 144.0, 180.0, 216.0, 252.0, 288.0, 324.0];
 
     let delta_v = FnEnergy(move |assignment: &Vec<usize>| {
         // Fuel cost: proportional to angular distance to assigned slot
@@ -572,10 +618,8 @@ fn ex08_aerospace() -> Result<(), AnnealError> {
         for &s in assignment.iter() {
             slot_count[s] += 1;
         }
-        let collision: f64 = slot_count
-            .iter()
-            .map(|&c| if c > 1 { (c - 1) as f64 * 1000.0 } else { 0.0 })
-            .sum();
+        let collision: f64 =
+            slot_count.iter().map(|&c| if c > 1 { (c - 1) as f64 * 1000.0 } else { 0.0 }).sum();
 
         fuel + collision
     });
@@ -619,7 +663,7 @@ impl MoveOperator<Vec<usize>> for RosterMove {
     fn propose(&self, state: &Vec<usize>, rng: &mut impl Rng) -> Vec<usize> {
         let mut s = state.clone();
         let nurse = (rng.next_u64() % self.n_nurses as u64) as usize;
-        let day   = (rng.next_u64() % self.days as u64) as usize;
+        let day = (rng.next_u64() % self.days as u64) as usize;
         s[nurse * self.days + day] = (rng.next_u64() % 3) as usize; // 0/1/2
         s
     }
@@ -627,9 +671,9 @@ impl MoveOperator<Vec<usize>> for RosterMove {
 
 fn ex09_healthcare() -> Result<(), AnnealError> {
     const NURSES: usize = 5;
-    const DAYS:   usize = 7;
+    const DAYS: usize = 7;
     // Required staff per shift per day
-    let day_req   = [2u32; DAYS]; // 2 nurses on day shift each day
+    let day_req = [2u32; DAYS]; // 2 nurses on day shift each day
     let night_req = [1u32; DAYS]; // 1 nurse on night shift each day
 
     let roster_cost = FnEnergy(move |roster: &Vec<usize>| {
@@ -637,7 +681,7 @@ fn ex09_healthcare() -> Result<(), AnnealError> {
 
         // Hard: staffing requirements
         for d in 0..DAYS {
-            let day_count   = (0..NURSES).filter(|&n| roster[n * DAYS + d] == 1).count() as u32;
+            let day_count = (0..NURSES).filter(|&n| roster[n * DAYS + d] == 1).count() as u32;
             let night_count = (0..NURSES).filter(|&n| roster[n * DAYS + d] == 2).count() as u32;
             cost += 100.0 * day_count.abs_diff(day_req[d]) as f64;
             cost += 100.0 * night_count.abs_diff(night_req[d]) as f64;
@@ -707,9 +751,9 @@ fn ex10_ml_hyperparams() -> Result<(), AnnealError> {
     //   optimal: log_lr=-3.0, log_wd=-4.0, dropout=0.3, momentum=0.9
     // Surface has a narrow ridge (like Rosenbrock) to stress-test exploration.
     let surrogate = FnEnergy(|h: &Vec<f64>| {
-        let log_lr   = h[0]; // log10(learning_rate), range [-5, -1]
-        let log_wd   = h[1]; // log10(weight_decay),  range [-6, -2]
-        let dropout  = h[2]; // range [0.0, 0.9]
+        let log_lr = h[0]; // log10(learning_rate), range [-5, -1]
+        let log_wd = h[1]; // log10(weight_decay),  range [-6, -2]
+        let dropout = h[2]; // range [0.0, 0.9]
         let momentum = h[3]; // range [0.0, 1.0)
 
         // Rosenbrock-style valley between log_lr and log_wd
@@ -719,15 +763,23 @@ fn ex10_ml_hyperparams() -> Result<(), AnnealError> {
 
         // Quadratic bowls for dropout and momentum
         let drop_cost = 10.0 * (dropout - 0.3).powi(2);
-        let mom_cost  = 50.0 * (momentum - 0.9).powi(2);
+        let mom_cost = 50.0 * (momentum - 0.9).powi(2);
 
         // Boundary penalties (keep params in valid ranges)
         let bounds = {
             let mut p = 0.0f64;
-            if log_lr < -5.0 || log_lr > -1.0 { p += 1e6 }
-            if log_wd < -6.0 || log_wd > -2.0 { p += 1e6 }
-            if dropout < 0.0 || dropout > 0.9  { p += 1e6 }
-            if momentum < 0.0 || momentum >= 1.0 { p += 1e6 }
+            if log_lr < -5.0 || log_lr > -1.0 {
+                p += 1e6
+            }
+            if log_wd < -6.0 || log_wd > -2.0 {
+                p += 1e6
+            }
+            if dropout < 0.0 || dropout > 0.9 {
+                p += 1e6
+            }
+            if momentum < 0.0 || momentum >= 1.0 {
+                p += 1e6
+            }
             p
         };
 
@@ -749,8 +801,7 @@ fn ex10_ml_hyperparams() -> Result<(), AnnealError> {
     let h = &result.best_state;
     println!(
         "[10] ML / Hyperparams         loss={:.4}  lr=1e{:.2}  wd=1e{:.2}  drop={:.2}  mom={:.3}",
-        result.best_energy,
-        h[0], h[1], h[2], h[3]
+        result.best_energy, h[0], h[1], h[2], h[3]
     );
     Ok(())
 }

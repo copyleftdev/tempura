@@ -153,10 +153,7 @@ impl GaussianMove {
 
 impl MoveOperator<Vec<f64>> for GaussianMove {
     fn propose(&self, state: &Vec<f64>, rng: &mut impl Rng) -> Vec<f64> {
-        state
-            .iter()
-            .map(|&x| self.sigma.mul_add(Self::normal(rng), x))
-            .collect()
+        state.iter().map(|&x| self.sigma.mul_add(Self::normal(rng), x)).collect()
     }
 }
 

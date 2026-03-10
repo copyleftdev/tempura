@@ -42,12 +42,12 @@
 
 /// Single-solution simulated annealing engine with builder pattern.
 pub mod annealer;
-/// Error types for configuration and runtime failures.
-pub mod error;
 /// Run diagnostics, trajectory recording, and result types.
 pub mod diagnostics;
 /// Energy (cost function) trait and helpers.
 pub mod energy;
+/// Error types for configuration and runtime failures.
+pub mod error;
 /// Benchmark landscapes for testing and validation.
 pub mod landscape;
 /// Numerical primitives: acceptance functions, fast exp, quantum tunneling.

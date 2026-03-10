@@ -148,40 +148,23 @@ where
             let delta_beta = 1.0 / t_next - 1.0 / t_current;
 
             // Step 1: Compute log-weights (numerical stability)
-            let log_weights: Vec<f64> = energies
-                .iter()
-                .map(|&e| -e * delta_beta)
-                .collect();
+            let log_weights: Vec<f64> = energies.iter().map(|&e| -e * delta_beta).collect();
 
             // Log-sum-exp for normalization
-            let max_log_w = log_weights
-                .iter()
-                .copied()
-                .fold(f64::NEG_INFINITY, f64::max);
-            let log_sum_exp: f64 = log_weights
-                .iter()
-                .map(|&lw| (lw - max_log_w).exp())
-                .sum::<f64>()
-                .ln()
-                + max_log_w;
+            let max_log_w = log_weights.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+            let log_sum_exp: f64 =
+                log_weights.iter().map(|&lw| (lw - max_log_w).exp()).sum::<f64>().ln() + max_log_w;
             let log_mean_weight = log_sum_exp - (n as f64).ln();
 
             // Accumulate for partition function estimation
             log_partition_ratio += log_mean_weight;
 
             // Normalized probabilities
-            let probs: Vec<f64> = log_weights
-                .iter()
-                .map(|&lw| (lw - log_sum_exp).exp())
-                .collect();
+            let probs: Vec<f64> = log_weights.iter().map(|&lw| (lw - log_sum_exp).exp()).collect();
 
             // Effective population fraction: ρ = 1 / (N · Σ p_i²)
             let sum_p_sq: f64 = probs.iter().map(|&p| p * p).sum();
-            let effective_fraction = if sum_p_sq > 0.0 {
-                1.0 / (n as f64 * sum_p_sq)
-            } else {
-                0.0
-            };
+            let effective_fraction = if sum_p_sq > 0.0 { 1.0 / (n as f64 * sum_p_sq) } else { 0.0 };
 
             // Step 2: Systematic resampling
             let indices = systematic_resample(&probs, n, &mut resample_rng);
@@ -241,10 +224,7 @@ where
             }
 
             let mean_energy = energies.iter().sum::<f64>() / n as f64;
-            let step_best = energies
-                .iter()
-                .copied()
-                .fold(f64::INFINITY, f64::min);
+            let step_best = energies.iter().copied().fold(f64::INFINITY, f64::min);
             let acceptance_rate = if total_proposals > 0 {
                 total_accepts as f64 / total_proposals as f64
             } else {
@@ -374,11 +354,17 @@ impl<S, E, M> PABuilder<S, E, M> {
     /// or if they are not strictly decreasing.
     pub fn temperatures(mut self, temps: Vec<f64>) -> Result<Self, AnnealError> {
         if temps.len() < 2 {
-            return Err(AnnealError::InvalidParameter { name: "temperatures", reason: "need at least 2" });
+            return Err(AnnealError::InvalidParameter {
+                name: "temperatures",
+                reason: "need at least 2",
+            });
         }
         for w in temps.windows(2) {
             if w[0] <= w[1] {
-                return Err(AnnealError::InvalidParameter { name: "temperatures", reason: "must be strictly decreasing" });
+                return Err(AnnealError::InvalidParameter {
+                    name: "temperatures",
+                    reason: "must be strictly decreasing",
+                });
             }
         }
         self.temperatures = Some(temps);
@@ -389,15 +375,29 @@ impl<S, E, M> PABuilder<S, E, M> {
     ///
     /// # Errors
     /// Returns [`AnnealError::InvalidParameter`] if parameters are invalid.
-    pub fn geometric_cooling(self, t_high: f64, t_low: f64, num_steps: usize) -> Result<Self, AnnealError> {
+    pub fn geometric_cooling(
+        self,
+        t_high: f64,
+        t_low: f64,
+        num_steps: usize,
+    ) -> Result<Self, AnnealError> {
         if t_high <= t_low {
-            return Err(AnnealError::InvalidParameter { name: "t_high", reason: "must exceed t_low" });
+            return Err(AnnealError::InvalidParameter {
+                name: "t_high",
+                reason: "must exceed t_low",
+            });
         }
         if t_low <= 0.0 {
-            return Err(AnnealError::InvalidParameter { name: "t_low", reason: "must be positive" });
+            return Err(AnnealError::InvalidParameter {
+                name: "t_low",
+                reason: "must be positive",
+            });
         }
         if num_steps < 2 {
-            return Err(AnnealError::InvalidParameter { name: "num_steps", reason: "need at least 2" });
+            return Err(AnnealError::InvalidParameter {
+                name: "num_steps",
+                reason: "need at least 2",
+            });
         }
         let ratio = t_low / t_high;
         let temps: Vec<f64> = (0..num_steps)
@@ -412,7 +412,10 @@ impl<S, E, M> PABuilder<S, E, M> {
     /// Returns [`AnnealError::InvalidParameter`] if `n < 2`.
     pub fn population_size(mut self, n: usize) -> Result<Self, AnnealError> {
         if n < 2 {
-            return Err(AnnealError::InvalidParameter { name: "population_size", reason: "must have at least 2 members" });
+            return Err(AnnealError::InvalidParameter {
+                name: "population_size",
+                reason: "must have at least 2 members",
+            });
         }
         self.population_size = n;
         Ok(self)
@@ -448,7 +451,9 @@ where
         Ok(PopulationAnnealer {
             objective: self.objective.ok_or(AnnealError::MissingField { field: "objective" })?,
             moves: self.moves.ok_or(AnnealError::MissingField { field: "moves" })?,
-            temperatures: self.temperatures.ok_or(AnnealError::MissingField { field: "temperatures" })?,
+            temperatures: self
+                .temperatures
+                .ok_or(AnnealError::MissingField { field: "temperatures" })?,
             population_size: self.population_size,
             sweeps_per_step: self.sweeps_per_step,
             seed: self.seed,
@@ -465,9 +470,7 @@ mod tests {
 
     fn cooling_schedule(t_high: f64, t_low: f64, steps: usize) -> Vec<f64> {
         let ratio = t_low / t_high;
-        (0..steps)
-            .map(|k| t_high * ratio.powf(k as f64 / (steps - 1) as f64))
-            .collect()
+        (0..steps).map(|k| t_high * ratio.powf(k as f64 / (steps - 1) as f64)).collect()
     }
 
     #[test]
@@ -476,18 +479,17 @@ mod tests {
         let result = builder::<Vec<f64>>()
             .objective(FnEnergy(|x: &Vec<f64>| x.iter().map(|v| v * v).sum()))
             .moves(GaussianMove::new(0.5))
-            .temperatures(temps).unwrap()
-            .population_size(100).unwrap()
+            .temperatures(temps)
+            .unwrap()
+            .population_size(100)
+            .unwrap()
             .sweeps_per_step(10)
             .seed(42)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(vec![5.0, -3.0, 7.0]);
 
-        assert!(
-            result.best_energy < 1.0,
-            "PA should find near-origin: E={}",
-            result.best_energy
-        );
+        assert!(result.best_energy < 1.0, "PA should find near-origin: E={}", result.best_energy);
     }
 
     #[test]
@@ -497,11 +499,14 @@ mod tests {
             builder::<Vec<f64>>()
                 .objective(FnEnergy(|x: &Vec<f64>| x.iter().map(|v| v * v).sum()))
                 .moves(GaussianMove::new(0.5))
-                .temperatures(temps).unwrap()
-                .population_size(50).unwrap()
+                .temperatures(temps)
+                .unwrap()
+                .population_size(50)
+                .unwrap()
                 .sweeps_per_step(5)
                 .seed(seed)
-                .build().unwrap()
+                .build()
+                .unwrap()
                 .run(vec![5.0, -3.0])
         };
 
@@ -520,11 +525,14 @@ mod tests {
         let result = builder::<Vec<f64>>()
             .objective(FnEnergy(|x: &Vec<f64>| x.iter().map(|v| v * v).sum()))
             .moves(GaussianMove::new(0.5))
-            .temperatures(temps).unwrap()
-            .population_size(50).unwrap()
+            .temperatures(temps)
+            .unwrap()
+            .population_size(50)
+            .unwrap()
             .sweeps_per_step(5)
             .seed(42)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(vec![5.0]);
 
         // num_steps - 1 transitions
@@ -540,10 +548,7 @@ mod tests {
         }
 
         // Partition function ratio should be finite
-        assert!(
-            result.log_partition_ratio.is_finite(),
-            "log Z ratio should be finite"
-        );
+        assert!(result.log_partition_ratio.is_finite(), "log Z ratio should be finite");
     }
 
     #[test]
@@ -553,11 +558,14 @@ mod tests {
         let result = builder::<Vec<f64>>()
             .objective(FnEnergy(|x: &Vec<f64>| x.iter().map(|v| v * v).sum()))
             .moves(GaussianMove::new(0.5))
-            .temperatures(temps).unwrap()
-            .population_size(200).unwrap()
+            .temperatures(temps)
+            .unwrap()
+            .population_size(200)
+            .unwrap()
             .sweeps_per_step(10)
             .seed(42)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(vec![5.0, -3.0]);
 
         let min_rho = result
@@ -566,11 +574,7 @@ mod tests {
             .map(|d| d.effective_fraction)
             .fold(f64::INFINITY, f64::min);
 
-        assert!(
-            min_rho > 0.1,
-            "gentle cooling should maintain ρ > 0.1, got {}",
-            min_rho
-        );
+        assert!(min_rho > 0.1, "gentle cooling should maintain ρ > 0.1, got {}", min_rho);
     }
 
     #[test]
@@ -586,9 +590,6 @@ mod tests {
         // Higher-probability states should appear more often
         let count_2 = indices.iter().filter(|&&i| i == 2).count();
         let count_0 = indices.iter().filter(|&&i| i == 0).count();
-        assert!(
-            count_2 > count_0,
-            "state 2 (p=0.3) should appear more than state 0 (p=0.1)"
-        );
+        assert!(count_2 > count_0, "state 2 (p=0.3) should appear more than state 0 (p=0.1)");
     }
 }

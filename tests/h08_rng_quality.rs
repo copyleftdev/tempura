@@ -26,9 +26,7 @@ struct Lcg {
 
 impl Rng for Lcg {
     fn from_seed(seed: u64) -> Self {
-        Self {
-            state: seed.wrapping_mul(6364136223846793005).wrapping_add(1),
-        }
+        Self { state: seed.wrapping_mul(6364136223846793005).wrapping_add(1) }
     }
 
     #[inline(always)]
@@ -193,9 +191,8 @@ fn h08b_lcg_distinguishable() {
     let mut xoshiro_energies: Vec<f64> = (0..num_seeds)
         .map(|s| run_sa_well::<Xoshiro256PlusPlus>(&well, &mv, &schedule, iterations, s))
         .collect();
-    let mut lcg_energies: Vec<f64> = (0..num_seeds)
-        .map(|s| run_sa_well::<Lcg>(&well, &mv, &schedule, iterations, s))
-        .collect();
+    let mut lcg_energies: Vec<f64> =
+        (0..num_seeds).map(|s| run_sa_well::<Lcg>(&well, &mv, &schedule, iterations, s)).collect();
 
     let (ks_well, p_well) = statistical::ks_two_sample(&mut xoshiro_energies, &mut lcg_energies);
 
@@ -289,11 +286,7 @@ fn h08c_xoshiro_throughput() {
         "H-08c FAILED: Xoshiro too slow ({:.1}ns/draw)",
         xoshiro_per_draw
     );
-    assert!(
-        pcg_per_draw < 50.0,
-        "H-08c FAILED: PCG too slow ({:.1}ns/draw)",
-        pcg_per_draw
-    );
+    assert!(pcg_per_draw < 50.0, "H-08c FAILED: PCG too slow ({:.1}ns/draw)", pcg_per_draw);
 }
 
 // ---------------------------------------------------------------------------

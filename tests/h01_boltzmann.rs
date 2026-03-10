@@ -127,8 +127,7 @@ fn h01b_mean_energy_convergence() {
 
         let mut total_err = 0.0f64;
         for seed in 0..num_seeds {
-            let histogram =
-                metropolis_fixed_temp(&well, &mv, temp, steps, burn_in, 1, seed);
+            let histogram = metropolis_fixed_temp(&well, &mv, temp, steps, burn_in, 1, seed);
             let total_samples: u64 = histogram.iter().sum();
             let mcmc_mean_e: f64 = (0..well.n)
                 .map(|x| {
@@ -166,10 +165,7 @@ fn h01_ergodicity() {
 
     let histogram = metropolis_fixed_temp(&well, &mv, 50.0, steps, 0, 1, 42);
     let unvisited = histogram.iter().filter(|&&c| c == 0).count();
-    assert_eq!(
-        unvisited, 0,
-        "all states should be visited at T=50 with 2×10^6 steps"
-    );
+    assert_eq!(unvisited, 0, "all states should be visited at T=50 with 2×10^6 steps");
 }
 
 /// Supplementary: at very high temperature, distribution should approach uniform.

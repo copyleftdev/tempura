@@ -89,8 +89,8 @@ fn ex01_ids_thresholds() -> Result<(), AnnealError> {
                 .zip(thresholds.iter())
                 .any(|(&score, &thresh)| score > thresh.clamp(0.0, 1.0));
             match (alerted, is_attack) {
-                (true, false)  => fp += 1,
-                (false, true)  => fn_ += 1,
+                (true, false) => fp += 1,
+                (false, true) => fn_ += 1,
                 _ => {}
             }
         }
@@ -150,18 +150,18 @@ fn ex02_firewall_ordering() -> Result<(), AnnealError> {
     // 12 rules: [traffic_fraction, is_essential_before_catchall]
     // traffic_fraction = fraction of packets this rule matches
     let rules: Vec<(f64, bool)> = vec![
-        (0.35, true),   // 0: allow established TCP (heavy)
-        (0.02, true),   // 1: drop known bad IPs
-        (0.18, true),   // 2: allow HTTP/HTTPS
-        (0.001, true),  // 3: drop fragmented UDP
-        (0.12, false),  // 4: allow DNS
-        (0.08, false),  // 5: allow SSH from mgmt range
-        (0.001, true),  // 6: drop Christmas tree packets
-        (0.05, false),  // 7: allow NTP
-        (0.03, false),  // 8: allow ICMP ping
-        (0.001, true),  // 9: rate-limit SMTP
-        (0.02, false),  // 10: allow monitoring probes
-        (0.00, false),  // 11: default deny (catch-all, must be last)
+        (0.35, true),  // 0: allow established TCP (heavy)
+        (0.02, true),  // 1: drop known bad IPs
+        (0.18, true),  // 2: allow HTTP/HTTPS
+        (0.001, true), // 3: drop fragmented UDP
+        (0.12, false), // 4: allow DNS
+        (0.08, false), // 5: allow SSH from mgmt range
+        (0.001, true), // 6: drop Christmas tree packets
+        (0.05, false), // 7: allow NTP
+        (0.03, false), // 8: allow ICMP ping
+        (0.001, true), // 9: rate-limit SMTP
+        (0.02, false), // 10: allow monitoring probes
+        (0.00, false), // 11: default deny (catch-all, must be last)
     ];
 
     let catchall_idx = 11usize;
@@ -195,11 +195,8 @@ fn ex02_firewall_ordering() -> Result<(), AnnealError> {
 
     // Initial: rules in their original declaration order
     let initial: Vec<usize> = (0..n_rules).collect();
-    let initial_cost: f64 = initial
-        .iter()
-        .enumerate()
-        .map(|(pos, &r)| rules[r].0 * (pos + 1) as f64)
-        .sum();
+    let initial_cost: f64 =
+        initial.iter().enumerate().map(|(pos, &r)| rules[r].0 * (pos + 1) as f64).sum();
 
     let result = Annealer::builder()
         .objective(ordering_cost)
@@ -246,7 +243,9 @@ impl MoveOperator<Vec<usize>> for HoneypotMove {
         // Pick a new node not already a honeypot
         let mut new_node = (rng.next_u64() % self.n_nodes as u64) as usize;
         for _ in 0..20 {
-            if !s.contains(&new_node) { break; }
+            if !s.contains(&new_node) {
+                break;
+            }
             new_node = (rng.next_u64() % self.n_nodes as u64) as usize;
         }
         s[hp_idx] = new_node;
@@ -257,32 +256,34 @@ impl MoveOperator<Vec<usize>> for HoneypotMove {
 
 fn ex03_honeypot_placement() -> Result<(), AnnealError> {
     const N: usize = 16; // nodes in network
-    const K: usize = 3;  // honeypots to place
+    const K: usize = 3; // honeypots to place
 
     // Adjacency list for a realistic-ish enterprise topology
     // (internet edge → DMZ → internal → critical assets)
     let adj: Vec<Vec<usize>> = vec![
-        vec![1, 2],          // 0: internet edge
-        vec![0, 3, 4],       // 1: DMZ web
-        vec![0, 5],          // 2: DMZ mail
-        vec![1, 6, 7],       // 3: internal web
-        vec![1, 8],          // 4: internal app
-        vec![2, 9],          // 5: internal mail
-        vec![3, 10],         // 6: dev workstation
-        vec![3, 11],         // 7: user workstation A
-        vec![4, 11, 12],     // 8: database proxy
-        vec![5, 13],         // 9: mail relay
-        vec![6, 14],         // 10: dev server
-        vec![7, 8, 14],      // 11: user workstation B
-        vec![8, 15],         // 12: primary DB (critical)
-        vec![9, 15],         // 13: backup mail (critical)
-        vec![10, 11, 15],    // 14: file server (critical)
-        vec![12, 13, 14],    // 15: domain controller (critical)
+        vec![1, 2],       // 0: internet edge
+        vec![0, 3, 4],    // 1: DMZ web
+        vec![0, 5],       // 2: DMZ mail
+        vec![1, 6, 7],    // 3: internal web
+        vec![1, 8],       // 4: internal app
+        vec![2, 9],       // 5: internal mail
+        vec![3, 10],      // 6: dev workstation
+        vec![3, 11],      // 7: user workstation A
+        vec![4, 11, 12],  // 8: database proxy
+        vec![5, 13],      // 9: mail relay
+        vec![6, 14],      // 10: dev server
+        vec![7, 8, 14],   // 11: user workstation B
+        vec![8, 15],      // 12: primary DB (critical)
+        vec![9, 15],      // 13: backup mail (critical)
+        vec![10, 11, 15], // 14: file server (critical)
+        vec![12, 13, 14], // 15: domain controller (critical)
     ];
 
     // BFS shortest path from src to any node in target set
     fn bfs_dist(src: usize, targets: &[usize], adj: &[Vec<usize>]) -> f64 {
-        if targets.contains(&src) { return 0.0; }
+        if targets.contains(&src) {
+            return 0.0;
+        }
         let mut dist = vec![u32::MAX; adj.len()];
         dist[src] = 0;
         let mut queue = std::collections::VecDeque::new();
@@ -291,7 +292,9 @@ fn ex03_honeypot_placement() -> Result<(), AnnealError> {
             for &v in &adj[u] {
                 if dist[v] == u32::MAX {
                     dist[v] = dist[u] + 1;
-                    if targets.contains(&v) { return dist[v] as f64; }
+                    if targets.contains(&v) {
+                        return dist[v] as f64;
+                    }
                     queue.push_back(v);
                 }
             }
@@ -305,10 +308,7 @@ fn ex03_honeypot_placement() -> Result<(), AnnealError> {
 
     let trap_cost = FnEnergy(move |honeypots: &Vec<usize>| {
         // Average distance from each entry node to nearest honeypot
-        entry_nodes
-            .iter()
-            .map(|&e| bfs_dist(e, honeypots, &adj_clone))
-            .sum::<f64>()
+        entry_nodes.iter().map(|&e| bfs_dist(e, honeypots, &adj_clone)).sum::<f64>()
             / entry_nodes.len() as f64
     });
 
@@ -385,8 +385,12 @@ fn ex04_patch_scheduling() -> Result<(), AnnealError> {
             .iter()
             .map(|&(must_first, then)| {
                 let pos_first = order.iter().position(|&x| x == must_first).unwrap_or(0);
-                let pos_then  = order.iter().position(|&x| x == then).unwrap_or(0);
-                if pos_first > pos_then { 1e6 } else { 0.0 }
+                let pos_then = order.iter().position(|&x| x == then).unwrap_or(0);
+                if pos_first > pos_then {
+                    1e6
+                } else {
+                    0.0
+                }
             })
             .sum();
 
@@ -437,16 +441,16 @@ fn ex05_siem_correlation() -> Result<(), AnnealError> {
     // Format: [event_gap_seconds] (gap between consecutive events in chain)
     // True attacks: gaps are typically tight (coordinated)
     let attack_chains: Vec<Vec<f64>> = vec![
-        vec![30.0, 45.0, 20.0],  // brute force → success → lateral
+        vec![30.0, 45.0, 20.0], // brute force → success → lateral
         vec![5.0, 10.0, 8.0],   // port scan → exploit → c2 beacon
-        vec![120.0, 90.0],       // spear phish → credential harvest
-        vec![600.0, 300.0],      // slow recon → staged payload
+        vec![120.0, 90.0],      // spear phish → credential harvest
+        vec![600.0, 300.0],     // slow recon → staged payload
         vec![15.0, 25.0, 30.0], // sql inject → dump → exfil
-        vec![200.0, 150.0],      // supply chain trigger
+        vec![200.0, 150.0],     // supply chain trigger
     ];
     // False positive chains: unrelated events that look similar
     let fp_chains: Vec<Vec<f64>> = vec![
-        vec![50.0, 600.0, 30.0],  // coincidental auth failures
+        vec![50.0, 600.0, 30.0],   // coincidental auth failures
         vec![900.0, 400.0],        // scheduled scan + alert
         vec![1800.0, 200.0, 50.0], // different subnets
     ];
@@ -464,16 +468,17 @@ fn ex05_siem_correlation() -> Result<(), AnnealError> {
             let w = window.clamp(1.0, 3600.0);
             // Check if this rule catches its intended attack chain
             if rule_idx < attacks_clone.len() {
-                let max_gap = attacks_clone[rule_idx]
-                    .iter()
-                    .cloned()
-                    .fold(0.0f64, f64::max);
-                if max_gap > w { missed += 1; }
+                let max_gap = attacks_clone[rule_idx].iter().cloned().fold(0.0f64, f64::max);
+                if max_gap > w {
+                    missed += 1;
+                }
             }
             // Check false positive exposure for each FP chain
             for fp_chain in &fps_clone {
                 let max_gap = fp_chain.iter().cloned().fold(0.0f64, f64::max);
-                if max_gap <= w { spurious += 1; }
+                if max_gap <= w {
+                    spurious += 1;
+                }
             }
         }
         missed as f64 * fn_weight + spurious as f64 * fp_weight
@@ -622,7 +627,7 @@ impl MoveOperator<Vec<usize>> for RoleMove {
 
 fn ex07_rbac_minimization() -> Result<(), AnnealError> {
     const U: usize = 10; // users
-    const R: usize = 6;  // candidate roles
+    const R: usize = 6; // candidate roles
 
     // role_perms[role] = bitmask of permissions granted
     let role_perms: [u8; R] = [
@@ -648,20 +653,22 @@ fn ex07_rbac_minimization() -> Result<(), AnnealError> {
         0b11000011, // user 9: needs perms 0,1,6,7
     ];
 
-    let role_cost = 5.0f64;  // cost per distinct role in use
+    let role_cost = 5.0f64; // cost per distinct role in use
     let missing_perm_cost = 100.0f64; // hard: must have required perms
-    let excess_perm_cost = 1.0f64;  // soft: over-provisioning
+    let excess_perm_cost = 1.0f64; // soft: over-provisioning
 
     let rbac_cost = FnEnergy(move |assignment: &Vec<usize>| {
         // Count distinct roles in use
         let mut roles_used = [false; R];
-        for &r in assignment.iter() { roles_used[r] = true; }
+        for &r in assignment.iter() {
+            roles_used[r] = true;
+        }
         let n_roles: u32 = roles_used.iter().map(|&u| u as u32).sum();
 
         let mut perm_cost = 0.0f64;
         for (u, &role) in assignment.iter().enumerate() {
             let granted = role_perms[role];
-            let needed  = required[u];
+            let needed = required[u];
             // Missing permissions: hard constraint
             let missing = needed & !granted;
             perm_cost += missing.count_ones() as f64 * missing_perm_cost;
@@ -685,7 +692,9 @@ fn ex07_rbac_minimization() -> Result<(), AnnealError> {
         .run(initial);
 
     let mut roles_used = [false; R];
-    for &r in result.best_state.iter() { roles_used[r] = true; }
+    for &r in result.best_state.iter() {
+        roles_used[r] = true;
+    }
     let n_roles: u32 = roles_used.iter().map(|&u| u as u32).sum();
 
     println!(
@@ -722,14 +731,16 @@ fn ex08_sbox_avalanche() -> Result<(), AnnealError> {
     // that differ in only that bit, count how often each output bit flips.
     let sac_cost = FnEnergy(|sbox: &Vec<u8>| {
         let n = sbox.len(); // 16
-        let bits = 4usize;  // log2(16)
+        let bits = 4usize; // log2(16)
 
         // Permutation validity: penalize duplicates
         let mut seen = [false; SIZE];
         let mut dup_penalty = 0.0f64;
         for &v in sbox.iter() {
             let idx = (v as usize) % SIZE;
-            if seen[idx] { dup_penalty += 10.0; }
+            if seen[idx] {
+                dup_penalty += 10.0;
+            }
             seen[idx] = true;
         }
 
@@ -826,16 +837,16 @@ fn ex09_anomaly_feature_selection() -> Result<(), AnnealError> {
     // Synthetic dataset: (feature_vector[F], is_anomaly)
     // Feature values simulate extracted network statistics
     let dataset: Vec<([f64; F], bool)> = vec![
-        ([0.9,0.1,0.8,0.2,0.7,0.1,0.6,0.3,0.8,0.2,0.9,0.1], true),
-        ([0.1,0.9,0.2,0.8,0.1,0.9,0.2,0.7,0.1,0.8,0.2,0.9], false),
-        ([0.8,0.2,0.9,0.1,0.6,0.2,0.7,0.2,0.9,0.1,0.8,0.2], true),
-        ([0.2,0.8,0.1,0.9,0.3,0.8,0.1,0.8,0.2,0.9,0.1,0.8], false),
-        ([0.7,0.3,0.8,0.2,0.8,0.1,0.9,0.1,0.7,0.3,0.7,0.3], true),
-        ([0.3,0.7,0.2,0.8,0.2,0.7,0.1,0.9,0.3,0.7,0.3,0.7], false),
-        ([0.85,0.1,0.75,0.2,0.65,0.15,0.55,0.2,0.75,0.2,0.85,0.1], true),
-        ([0.15,0.8,0.25,0.8,0.35,0.7,0.45,0.7,0.25,0.8,0.15,0.9], false),
-        ([0.6,0.4,0.7,0.3,0.9,0.1,0.8,0.2,0.6,0.4,0.6,0.4], true),
-        ([0.4,0.6,0.3,0.7,0.1,0.9,0.2,0.8,0.4,0.6,0.4,0.6], false),
+        ([0.9, 0.1, 0.8, 0.2, 0.7, 0.1, 0.6, 0.3, 0.8, 0.2, 0.9, 0.1], true),
+        ([0.1, 0.9, 0.2, 0.8, 0.1, 0.9, 0.2, 0.7, 0.1, 0.8, 0.2, 0.9], false),
+        ([0.8, 0.2, 0.9, 0.1, 0.6, 0.2, 0.7, 0.2, 0.9, 0.1, 0.8, 0.2], true),
+        ([0.2, 0.8, 0.1, 0.9, 0.3, 0.8, 0.1, 0.8, 0.2, 0.9, 0.1, 0.8], false),
+        ([0.7, 0.3, 0.8, 0.2, 0.8, 0.1, 0.9, 0.1, 0.7, 0.3, 0.7, 0.3], true),
+        ([0.3, 0.7, 0.2, 0.8, 0.2, 0.7, 0.1, 0.9, 0.3, 0.7, 0.3, 0.7], false),
+        ([0.85, 0.1, 0.75, 0.2, 0.65, 0.15, 0.55, 0.2, 0.75, 0.2, 0.85, 0.1], true),
+        ([0.15, 0.8, 0.25, 0.8, 0.35, 0.7, 0.45, 0.7, 0.25, 0.8, 0.15, 0.9], false),
+        ([0.6, 0.4, 0.7, 0.3, 0.9, 0.1, 0.8, 0.2, 0.6, 0.4, 0.6, 0.4], true),
+        ([0.4, 0.6, 0.3, 0.7, 0.1, 0.9, 0.2, 0.8, 0.4, 0.6, 0.4, 0.6], false),
     ];
 
     let lambda = 0.05f64; // feature cost weight
@@ -844,7 +855,9 @@ fn ex09_anomaly_feature_selection() -> Result<(), AnnealError> {
     // Classifier: anomaly if mean of selected features > 0.5
     let f1_cost = FnEnergy(move |selected: &Vec<bool>| {
         let n_selected = selected.iter().filter(|&&s| s).count();
-        if n_selected == 0 { return 1e9; }
+        if n_selected == 0 {
+            return 1e9;
+        }
 
         let mut tp = 0u32;
         let mut fp = 0u32;
@@ -861,15 +874,15 @@ fn ex09_anomaly_feature_selection() -> Result<(), AnnealError> {
 
             let predicted = mean > 0.5;
             match (predicted, is_anomaly) {
-                (true, true)   => tp += 1,
-                (true, false)  => fp += 1,
-                (false, true)  => fn_ += 1,
+                (true, true) => tp += 1,
+                (true, false) => fp += 1,
+                (false, true) => fn_ += 1,
                 (false, false) => {}
             }
         }
 
         let precision = if tp + fp > 0 { tp as f64 / (tp + fp) as f64 } else { 0.0 };
-        let recall    = if tp + fn_ > 0 { tp as f64 / (tp + fn_) as f64 } else { 0.0 };
+        let recall = if tp + fn_ > 0 { tp as f64 / (tp + fn_) as f64 } else { 0.0 };
         let f1 = if precision + recall > 0.0 {
             2.0 * precision * recall / (precision + recall)
         } else {
@@ -894,8 +907,7 @@ fn ex09_anomaly_feature_selection() -> Result<(), AnnealError> {
     let n_sel = result.best_state.iter().filter(|&&s| s).count();
     println!(
         "[09] Anomaly Feature Sel.     f1={:.3}  features={}/{}  accept={:.1}%",
-        (-result.best_energy + 0.05 * n_sel as f64 - result.best_energy).abs()
-            .min(1.0),
+        (-result.best_energy + 0.05 * n_sel as f64 - result.best_energy).abs().min(1.0),
         n_sel,
         F,
         result.diagnostics.acceptance_rate() * 100.0
@@ -945,9 +957,7 @@ fn ex10_incident_response() -> Result<(), AnnealError> {
         // Total analyst power on queue q = Σ_a alloc[a*Q+q] × efficiency[a][q]
         let mut mttr_cost = 0.0f64;
         for q in 0..Q {
-            let power: f64 = (0..A)
-                .map(|a| alloc[a * Q + q].max(0.0) * efficiency[a][q])
-                .sum();
+            let power: f64 = (0..A).map(|a| alloc[a * Q + q].max(0.0) * efficiency[a][q]).sum();
             // MTTR for queue q = incident_rate / power (Little's law)
             let mttr = if power > 0.1 { incident_rate[q] / power } else { 1e6 };
             mttr_cost += priority[q] * mttr;

@@ -68,18 +68,15 @@ fn in_global_basin(x: i64) -> bool {
 const START_STATE: i64 = 7; // A_CENTER
 
 /// Run SA with a given schedule, return whether the best state found is in the global basin.
-fn run_sa_trial<S: CoolingSchedule>(
-    schedule: S,
-    iterations: u64,
-    seed: u64,
-) -> (bool, f64) {
+fn run_sa_trial<S: CoolingSchedule>(schedule: S, iterations: u64, seed: u64) -> (bool, f64) {
     let mut sa = annealer::builder::<i64>()
         .objective(FnEnergy(hajek_energy))
         .moves(NeighborMove::new(0, N as i64 - 1))
         .schedule(schedule)
         .iterations(iterations)
         .seed(seed)
-        .build().unwrap();
+        .build()
+        .unwrap();
     let result = sa.run(START_STATE);
     (in_global_basin(result.best_state), result.best_energy)
 }
@@ -104,18 +101,14 @@ fn h03a_logarithmic_vs_exponential() {
 
     // Logarithmic cooling with c = d*
     let log_successes = (0..num_seeds)
-        .filter(|&seed| {
-            run_sa_trial(Logarithmic::new(D_STAR), iterations, seed).0
-        })
+        .filter(|&seed| run_sa_trial(Logarithmic::new(D_STAR), iterations, seed).0)
         .count();
     let log_rate = log_successes as f64 / num_seeds as f64;
 
     // Fast exponential: T0 = d*, α = 0.99 → T drops to ~0.5 in 500 steps.
     // The chain barely has time to reach the barrier before freezing.
     let exp_fast_successes = (0..num_seeds)
-        .filter(|&seed| {
-            run_sa_trial(Exponential::new(D_STAR, 0.99), iterations, seed).0
-        })
+        .filter(|&seed| run_sa_trial(Exponential::new(D_STAR, 0.99), iterations, seed).0)
         .count();
     let exp_fast_rate = exp_fast_successes as f64 / num_seeds as f64;
 
@@ -123,9 +116,7 @@ fn h03a_logarithmic_vs_exponential() {
     let t0 = 2.0 * D_STAR;
     let alpha = (0.01 / t0).powf(1.0 / iterations as f64);
     let exp_slow_successes = (0..num_seeds)
-        .filter(|&seed| {
-            run_sa_trial(Exponential::new(t0, alpha), iterations, seed).0
-        })
+        .filter(|&seed| run_sa_trial(Exponential::new(t0, alpha), iterations, seed).0)
         .count();
     let _exp_slow_rate = exp_slow_successes as f64 / num_seeds as f64;
 
@@ -141,7 +132,8 @@ fn h03a_logarithmic_vs_exponential() {
     assert!(
         exp_fast_rate < log_rate,
         "H-03a FAILED: Fast exponential ({:.1}%) not worse than logarithmic ({:.1}%)",
-        exp_fast_rate * 100.0, log_rate * 100.0
+        exp_fast_rate * 100.0,
+        log_rate * 100.0
     );
 }
 
@@ -163,9 +155,7 @@ fn h03b_success_rate_vs_c() {
 
     for &c in &c_values {
         let successes = (0..num_seeds)
-            .filter(|&seed| {
-                run_sa_trial(Logarithmic::new(c), iterations, seed).0
-            })
+            .filter(|&seed| run_sa_trial(Logarithmic::new(c), iterations, seed).0)
             .count();
         rates.push(successes as f64 / num_seeds as f64);
     }
@@ -248,7 +238,9 @@ fn h03_all_schedules_positive_on_full_run() {
             assert!(
                 t > 0.0 && t.is_finite(),
                 "{} at step {}: T={} (must be positive and finite)",
-                name, step, t
+                name,
+                step,
+                t
             );
         }
     }
@@ -263,20 +255,12 @@ fn h03_landscape_properties() {
 
     // Global minimum at B_CENTER
     let e_global = hajek_energy(&(B_CENTER as i64));
-    assert!(
-        (e_global - (-B_DEPTH)).abs() < 1e-10,
-        "global min energy should be {}",
-        -B_DEPTH
-    );
+    assert!((e_global - (-B_DEPTH)).abs() < 1e-10, "global min energy should be {}", -B_DEPTH);
     assert!(e_global < e_local, "global should be lower than local");
 
     // Barrier at BARRIER_POS
     let e_barrier = hajek_energy(&(BARRIER_POS as i64));
-    assert!(
-        (e_barrier - D_STAR).abs() < 1e-10,
-        "barrier energy should be d*={}",
-        D_STAR
-    );
+    assert!((e_barrier - D_STAR).abs() < 1e-10, "barrier energy should be d*={}", D_STAR);
 
     // d* = barrier - local min
     assert!((e_barrier - e_local - D_STAR).abs() < 1e-10);

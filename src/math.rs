@@ -198,7 +198,10 @@ mod tests {
             assert!(
                 rel_err < 0.04,
                 "fast_exp({}) = {} vs exact {} (err {})",
-                x, approx, exact, rel_err
+                x,
+                approx,
+                exact,
+                rel_err
             );
         }
     }

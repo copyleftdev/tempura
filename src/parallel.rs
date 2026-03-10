@@ -38,7 +38,11 @@ use crate::rng::{DefaultRng, Rng};
 /// # Errors
 /// Returns [`AnnealError::InvalidParameter`] if `t_min <= 0`, `t_max <= t_min`,
 /// or `num_replicas < 2`.
-pub fn geometric_ladder(t_min: f64, t_max: f64, num_replicas: usize) -> Result<Vec<f64>, AnnealError> {
+pub fn geometric_ladder(
+    t_min: f64,
+    t_max: f64,
+    num_replicas: usize,
+) -> Result<Vec<f64>, AnnealError> {
     if t_min <= 0.0 {
         return Err(AnnealError::InvalidParameter { name: "t_min", reason: "must be positive" });
     }
@@ -46,7 +50,10 @@ pub fn geometric_ladder(t_min: f64, t_max: f64, num_replicas: usize) -> Result<V
         return Err(AnnealError::InvalidParameter { name: "t_max", reason: "must exceed t_min" });
     }
     if num_replicas < 2 {
-        return Err(AnnealError::InvalidParameter { name: "num_replicas", reason: "need at least 2" });
+        return Err(AnnealError::InvalidParameter {
+            name: "num_replicas",
+            reason: "need at least 2",
+        });
     }
 
     let ratio = t_max / t_min;
@@ -245,11 +252,7 @@ where
                     let delta = (beta_i - beta_j) * (replicas[j].energy - replicas[i].energy);
 
                     let u = swap_rng.next_f64();
-                    let swap_accepted = if delta <= 0.0 {
-                        true
-                    } else {
-                        u < (-delta).exp()
-                    };
+                    let swap_accepted = if delta <= 0.0 { true } else { u < (-delta).exp() };
 
                     swaps_proposed[i] += 1;
                     if swap_accepted {
@@ -269,25 +272,21 @@ where
         let swap_rates: Vec<f64> = swaps_proposed
             .iter()
             .zip(swaps_accepted.iter())
-            .map(|(&proposed, &accepted)| {
-                if proposed > 0 {
-                    accepted as f64 / proposed as f64
-                } else {
-                    0.0
-                }
-            })
+            .map(
+                |(&proposed, &accepted)| {
+                    if proposed > 0 {
+                        accepted as f64 / proposed as f64
+                    } else {
+                        0.0
+                    }
+                },
+            )
             .collect();
 
         let replica_acceptance_rates: Vec<f64> = replica_accepts
             .iter()
             .zip(replica_proposals.iter())
-            .map(|(&acc, &prop)| {
-                if prop > 0 {
-                    acc as f64 / prop as f64
-                } else {
-                    0.0
-                }
-            })
+            .map(|(&acc, &prop)| if prop > 0 { acc as f64 / prop as f64 } else { 0.0 })
             .collect();
 
         PTResult {
@@ -381,11 +380,17 @@ impl<S, E, M> PTBuilder<S, E, M> {
     /// or if they are not strictly increasing.
     pub fn temperatures(mut self, temps: Vec<f64>) -> Result<Self, AnnealError> {
         if temps.len() < 2 {
-            return Err(AnnealError::InvalidParameter { name: "temperatures", reason: "need at least 2" });
+            return Err(AnnealError::InvalidParameter {
+                name: "temperatures",
+                reason: "need at least 2",
+            });
         }
         for w in temps.windows(2) {
             if w[0] >= w[1] {
-                return Err(AnnealError::InvalidParameter { name: "temperatures", reason: "must be strictly increasing" });
+                return Err(AnnealError::InvalidParameter {
+                    name: "temperatures",
+                    reason: "must be strictly increasing",
+                });
             }
         }
         self.temperatures = Some(temps);
@@ -396,7 +401,12 @@ impl<S, E, M> PTBuilder<S, E, M> {
     ///
     /// # Errors
     /// Returns [`AnnealError::InvalidParameter`] if parameters are invalid.
-    pub fn geometric_temperatures(self, t_min: f64, t_max: f64, num_replicas: usize) -> Result<Self, AnnealError> {
+    pub fn geometric_temperatures(
+        self,
+        t_min: f64,
+        t_max: f64,
+        num_replicas: usize,
+    ) -> Result<Self, AnnealError> {
         let temps = geometric_ladder(t_min, t_max, num_replicas)?;
         self.temperatures(temps)
     }
@@ -438,7 +448,9 @@ where
         Ok(ParallelTempering {
             objective: self.objective.ok_or(AnnealError::MissingField { field: "objective" })?,
             moves: self.moves.ok_or(AnnealError::MissingField { field: "moves" })?,
-            temperatures: self.temperatures.ok_or(AnnealError::MissingField { field: "temperatures" })?,
+            temperatures: self
+                .temperatures
+                .ok_or(AnnealError::MissingField { field: "temperatures" })?,
             iterations_per_replica: self.iterations_per_replica,
             swap_interval: self.swap_interval,
             seed: self.seed,
@@ -474,18 +486,16 @@ mod tests {
         let result = builder::<Vec<f64>>()
             .objective(FnEnergy(|x: &Vec<f64>| x.iter().map(|v| v * v).sum()))
             .moves(crate::moves::GaussianMove::new(0.5))
-            .geometric_temperatures(0.1, 50.0, 4).unwrap()
+            .geometric_temperatures(0.1, 50.0, 4)
+            .unwrap()
             .iterations(50_000)
             .swap_interval(10)
             .seed(42)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(vec![5.0, -3.0, 7.0]);
 
-        assert!(
-            result.best_energy < 1.0,
-            "PT should find near-origin: E={}",
-            result.best_energy
-        );
+        assert!(result.best_energy < 1.0, "PT should find near-origin: E={}", result.best_energy);
     }
 
     #[test]
@@ -494,10 +504,12 @@ mod tests {
             builder::<Vec<f64>>()
                 .objective(FnEnergy(|x: &Vec<f64>| x.iter().map(|v| v * v).sum()))
                 .moves(crate::moves::GaussianMove::new(0.5))
-                .geometric_temperatures(0.1, 50.0, 4).unwrap()
+                .geometric_temperatures(0.1, 50.0, 4)
+                .unwrap()
                 .iterations(10_000)
                 .seed(seed)
-                .build().unwrap()
+                .build()
+                .unwrap()
                 .run(vec![5.0, -3.0])
         };
 
@@ -515,11 +527,13 @@ mod tests {
         let result = builder::<Vec<f64>>()
             .objective(FnEnergy(|x: &Vec<f64>| x.iter().map(|v| v * v).sum()))
             .moves(crate::moves::GaussianMove::new(0.5))
-            .geometric_temperatures(0.1, 50.0, 4).unwrap()
+            .geometric_temperatures(0.1, 50.0, 4)
+            .unwrap()
             .iterations(10_000)
             .swap_interval(10)
             .seed(42)
-            .build().unwrap()
+            .build()
+            .unwrap()
             .run(vec![5.0]);
 
         // 4 replicas → 3 adjacent pairs
@@ -553,11 +567,13 @@ mod tests {
             let pt_result = builder::<i64>()
                 .objective(well.clone())
                 .moves(mv.clone())
-                .geometric_temperatures(0.5, 30.0, 4).unwrap()
+                .geometric_temperatures(0.5, 30.0, 4)
+                .unwrap()
                 .iterations(total_budget / 4)
                 .swap_interval(10)
                 .seed(seed)
-                .build().unwrap()
+                .build()
+                .unwrap()
                 .run(0);
 
             if pt_result.best_energy < -3.0 {
@@ -571,7 +587,8 @@ mod tests {
                 .schedule(crate::schedule::Exponential::new(30.0, 0.99999))
                 .iterations(total_budget)
                 .seed(seed)
-                .build().unwrap();
+                .build()
+                .unwrap();
             let sa_result = sa.run(0);
 
             if sa_result.best_energy < -3.0 {
@@ -583,7 +600,10 @@ mod tests {
         assert!(
             pt_successes >= sa_successes / 2,
             "PT ({}/{}) should not be dramatically worse than SA ({}/{})",
-            pt_successes, num_trials, sa_successes, num_trials
+            pt_successes,
+            num_trials,
+            sa_successes,
+            num_trials
         );
     }
 }
