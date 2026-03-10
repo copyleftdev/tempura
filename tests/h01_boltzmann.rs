@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::pedantic, clippy::nursery, unused)]
 /// H-01 — Boltzmann Equilibrium Convergence Tests
 ///
 /// Validates that Tempura's Metropolis chain at fixed temperature converges

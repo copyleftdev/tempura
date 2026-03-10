@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::pedantic, clippy::nursery, unused)]
 /// H-03 — Logarithmic Cooling Optimality (Hajek's Theorem)
 ///
 /// Validates that logarithmic cooling T_k = c/ln(1+k) is the slowest schedule

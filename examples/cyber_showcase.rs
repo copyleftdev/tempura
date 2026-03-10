@@ -1,3 +1,4 @@
+#![allow(missing_docs, clippy::pedantic, clippy::nursery)]
 //! # Cybersecurity Showcase — Simulated Annealing for Security Engineering
 //!
 //! Ten self-contained examples applying SA to defensive security problems.

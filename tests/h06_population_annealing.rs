@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::pedantic, clippy::nursery, unused)]
 /// H-06 — Population Annealing Free Energy Estimation
 ///
 /// Validates that:

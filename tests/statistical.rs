@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::pedantic, clippy::nursery, unused)]
 /// Shared statistical test utilities for hypothesis testing.
 ///
 /// Provides chi-squared goodness-of-fit, Kolmogorov-Smirnov tests,

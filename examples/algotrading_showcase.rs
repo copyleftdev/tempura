@@ -1,3 +1,4 @@
+#![allow(missing_docs, clippy::pedantic, clippy::nursery)]
 //! # Algorithmic Trading Showcase — SA for Quantitative Finance
 //!
 //! Ten in-depth examples applying SA to real algo-trading problem classes.

@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::pedantic, clippy::nursery, unused)]
 /// H-07 — Quantum Tunneling Barrier Advantage
 ///
 /// Validates that:

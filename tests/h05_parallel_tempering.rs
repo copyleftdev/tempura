@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::pedantic, clippy::nursery, unused)]
 /// H-05 — Parallel Tempering Mixing Enhancement
 ///
 /// Validates that:

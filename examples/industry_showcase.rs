@@ -1,3 +1,4 @@
+#![allow(missing_docs, clippy::pedantic, clippy::nursery)]
 //! # Industry Showcase — Simulated Annealing Across Domains
 //!
 //! Demonstrates SA viability for 10 distinct industries using Tempura.

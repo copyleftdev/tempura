@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::pedantic, clippy::nursery, unused)]
 /// H-02 — Detailed Balance & Reversibility Tests
 ///
 /// Validates that Metropolis and Barker acceptance satisfy detailed balance,
