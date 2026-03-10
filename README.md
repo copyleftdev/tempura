@@ -2,7 +2,7 @@
   <img src="media/logo-hero.png" alt="Tempura logo" width="480">
 </p>
 
-# tempura
+# tempura-sa
 
 [![Crates.io](https://img.shields.io/crates/v/tempura-sa.svg)](https://crates.io/crates/tempura-sa)
 [![docs.rs](https://docs.rs/tempura-sa/badge.svg)](https://docs.rs/tempura-sa)
@@ -40,7 +40,7 @@ tempura-sa = "0.1"
 ```
 
 ```rust
-use tempura::prelude::*;
+use tempura_sa::prelude::*;
 
 // Minimize f(x) = (x - 3.7)²
 let result = Annealer::builder::<f64>()
@@ -70,8 +70,8 @@ println!("best E = {:.6}", result.best_energy);  // ≈ 0.000000
 ### Parallel Tempering
 
 ```rust
-use tempura::prelude::*;
-use tempura::parallel::PTBuilder;
+use tempura_sa::prelude::*;
+use tempura_sa::parallel::PTBuilder;
 
 let result = PTBuilder::<f64>::new()
     .temperatures(vec![0.01, 0.1, 0.5, 2.0])
@@ -87,8 +87,8 @@ let result = PTBuilder::<f64>::new()
 ### Population Annealing
 
 ```rust
-use tempura::prelude::*;
-use tempura::population::PABuilder;
+use tempura_sa::prelude::*;
+use tempura_sa::population::PABuilder;
 
 let result = PABuilder::<f64>::new()
     .population_size(200)
@@ -130,7 +130,7 @@ let result = PABuilder::<f64>::new()
 Implement `MoveOperator<S>` for any custom state type:
 
 ```rust
-use tempura::prelude::*;
+use tempura_sa::prelude::*;
 
 struct FlipBit;
 
