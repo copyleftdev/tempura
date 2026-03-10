@@ -24,6 +24,7 @@ include = [
     "LICENSE",
     "LICENSE-MIT",
     "LICENSE-APACHE",
+    "media/**/*",
 ]
 
 [lints.rust]
