@@ -9,13 +9,13 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::energy::Energy;
-use tempura::landscape::potential_well::{PotentialWell, WellNeighborMove};
-use tempura::landscape::rastrigin::Rastrigin;
-use tempura::math;
-use tempura::moves::MoveOperator;
-use tempura::rng::{Pcg64, Rng, Xoshiro256PlusPlus};
-use tempura::schedule::{CoolingSchedule, Exponential};
+use tempura_sa::energy::Energy;
+use tempura_sa::landscape::potential_well::{PotentialWell, WellNeighborMove};
+use tempura_sa::landscape::rastrigin::Rastrigin;
+use tempura_sa::math;
+use tempura_sa::moves::MoveOperator;
+use tempura_sa::rng::{Pcg64, Rng, Xoshiro256PlusPlus};
+use tempura_sa::schedule::{CoolingSchedule, Exponential};
 
 /// Simple LCG (glibc-style) for testing poor RNG quality.
 /// Period: 2^31, known to fail BigCrush.

@@ -11,7 +11,7 @@
 ///   Temperature: T = 2.0
 mod statistical;
 
-use tempura::rng::{Rng, Xoshiro256PlusPlus};
+use tempura_sa::rng::{Rng, Xoshiro256PlusPlus};
 
 /// Small graph landscape for detailed balance tests.
 const NUM_STATES: usize = 5;

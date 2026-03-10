@@ -12,10 +12,10 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::energy::Energy;
-use tempura::landscape::rastrigin::Rastrigin;
-use tempura::math;
-use tempura::rng::{Rng, Xoshiro256PlusPlus};
+use tempura_sa::energy::Energy;
+use tempura_sa::landscape::rastrigin::Rastrigin;
+use tempura_sa::math;
+use tempura_sa::rng::{Rng, Xoshiro256PlusPlus};
 
 /// AoS (Array-of-Structures) layout: each member is a self-contained struct.
 #[derive(Clone)]

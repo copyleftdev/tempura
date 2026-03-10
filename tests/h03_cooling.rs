@@ -11,10 +11,10 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::annealer;
-use tempura::energy::FnEnergy;
-use tempura::moves::NeighborMove;
-use tempura::schedule::{CoolingSchedule, Exponential, Linear, Logarithmic};
+use tempura_sa::annealer;
+use tempura_sa::energy::FnEnergy;
+use tempura_sa::moves::NeighborMove;
+use tempura_sa::schedule::{CoolingSchedule, Exponential, Linear, Logarithmic};
 
 // ---------------------------------------------------------------------------
 // Hajek double-well landscape (unscaled quadratics, per H-03 spec)

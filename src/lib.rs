@@ -23,7 +23,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use tempura::prelude::*;
+//! use tempura_sa::prelude::*;
 //!
 //! fn main() -> Result<(), AnnealError> {
 //!     let result = Annealer::builder()

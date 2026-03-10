@@ -9,9 +9,9 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::landscape::double_well::{DoubleWell, DoubleWellMove};
-use tempura::landscape::potential_well::{PotentialWell, WellNeighborMove};
-use tempura::parallel;
+use tempura_sa::landscape::double_well::{DoubleWell, DoubleWellMove};
+use tempura_sa::landscape::potential_well::{PotentialWell, WellNeighborMove};
+use tempura_sa::parallel;
 
 // ---------------------------------------------------------------------------
 // H-05a: PT beats SA on barrier crossing
@@ -57,10 +57,10 @@ fn h05a_pt_beats_sa_on_barrier() {
         }
 
         // SA: full budget, exponential cooling
-        let mut sa = tempura::annealer::builder::<i64>()
+        let mut sa = tempura_sa::annealer::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
-            .schedule(tempura::schedule::Exponential::new(100.0, 0.99999))
+            .schedule(tempura_sa::schedule::Exponential::new(100.0, 0.99999))
             .iterations(total_budget)
             .seed(seed)
             .build()

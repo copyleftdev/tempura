@@ -4,8 +4,8 @@
 
 # tempura
 
-[![Crates.io](https://img.shields.io/crates/v/tempura.svg)](https://crates.io/crates/tempura)
-[![docs.rs](https://docs.rs/tempura/badge.svg)](https://docs.rs/tempura)
+[![Crates.io](https://img.shields.io/crates/v/tempura-sa.svg)](https://crates.io/crates/tempura-sa)
+[![docs.rs](https://docs.rs/tempura-sa/badge.svg)](https://docs.rs/tempura-sa)
 [![CI](https://github.com/copyleftdev/tempura/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/tempura/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 [![MSRV](https://img.shields.io/badge/MSRV-1.70-orange.svg)](https://blog.rust-lang.org/2023/06/01/Rust-1.70.0.html)
@@ -36,7 +36,7 @@ by construction — same seed, same result, every time.
 
 ```toml
 [dependencies]
-tempura = "0.1"
+tempura-sa = "0.1"
 ```
 
 ```rust

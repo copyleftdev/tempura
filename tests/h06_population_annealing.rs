@@ -9,9 +9,9 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::landscape::double_well::{DoubleWell, DoubleWellMove};
-use tempura::landscape::potential_well::{PotentialWell, WellNeighborMove};
-use tempura::population;
+use tempura_sa::landscape::double_well::{DoubleWell, DoubleWellMove};
+use tempura_sa::landscape::potential_well::{PotentialWell, WellNeighborMove};
+use tempura_sa::population;
 
 // ---------------------------------------------------------------------------
 // H-06a: Free energy estimation error scales as O(1/√N)
@@ -218,7 +218,7 @@ fn h06c_pa_competitive_with_pt() {
         pa_energies.push(pa_result.best_energy);
 
         // PT: 4 replicas × 50k steps = 200k total proposals
-        let pt_result = tempura::parallel::builder::<i64>()
+        let pt_result = tempura_sa::parallel::builder::<i64>()
             .objective(well.clone())
             .moves(mv.clone())
             .geometric_temperatures(0.5, 30.0, 4)

@@ -23,10 +23,10 @@
 
 #![allow(clippy::excessive_precision)]
 
-use tempura::energy::FnEnergy;
-use tempura::prelude::{AnnealError, Annealer, GaussianMove};
-use tempura::rng::{Rng, Xoshiro256PlusPlus};
-use tempura::schedule::{Adaptive, Exponential, Logarithmic};
+use tempura_sa::energy::FnEnergy;
+use tempura_sa::prelude::{AnnealError, Annealer, GaussianMove};
+use tempura_sa::rng::{Rng, Xoshiro256PlusPlus};
+use tempura_sa::schedule::{Adaptive, Exponential, Logarithmic};
 
 fn main() -> Result<(), AnnealError> {
     println!("=== Tempura Algorithmic Trading Showcase ===\n");

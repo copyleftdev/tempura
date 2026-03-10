@@ -20,11 +20,11 @@
 //!   9.  Anomaly Detection Feature Sel.  — maximize F1 with minimum feature set
 //!  10.  Incident Response Allocation    — minimize weighted mean time to respond
 
-use tempura::energy::FnEnergy;
-use tempura::moves::MoveOperator;
-use tempura::prelude::{AnnealError, Annealer, GaussianMove, SwapMove};
-use tempura::rng::Rng;
-use tempura::schedule::{Cauchy, Exponential, Fast, Logarithmic};
+use tempura_sa::energy::FnEnergy;
+use tempura_sa::moves::MoveOperator;
+use tempura_sa::prelude::{AnnealError, Annealer, GaussianMove, SwapMove};
+use tempura_sa::rng::Rng;
+use tempura_sa::schedule::{Cauchy, Exponential, Fast, Logarithmic};
 
 fn main() -> Result<(), AnnealError> {
     println!("=== Tempura Cybersecurity Showcase ===\n");

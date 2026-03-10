@@ -11,11 +11,11 @@
 ///   4. Pass: ≥95/100 seeds pass
 mod statistical;
 
-use tempura::energy::Energy;
-use tempura::landscape::potential_well::{PotentialWell, WellNeighborMove};
-use tempura::math;
-use tempura::moves::MoveOperator;
-use tempura::rng::{Rng, Xoshiro256PlusPlus};
+use tempura_sa::energy::Energy;
+use tempura_sa::landscape::potential_well::{PotentialWell, WellNeighborMove};
+use tempura_sa::math;
+use tempura_sa::moves::MoveOperator;
+use tempura_sa::rng::{Rng, Xoshiro256PlusPlus};
 
 /// Run a raw Metropolis chain at fixed temperature (no cooling) and return
 /// the state histogram.

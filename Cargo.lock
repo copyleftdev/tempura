@@ -908,7 +908,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tempura"
+name = "tempura-sa"
 version = "0.1.0"
 dependencies = [
  "approx",

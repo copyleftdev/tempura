@@ -20,11 +20,11 @@
 //!   9.  Healthcare       — Staff rostering (nurse scheduling)
 //!  10.  Machine Learning — Neural-network hyperparameter tuning
 
-use tempura::energy::FnEnergy;
-use tempura::moves::{GaussianMove, MoveOperator, SwapMove};
-use tempura::prelude::{AnnealError, Annealer};
-use tempura::rng::Rng;
-use tempura::schedule::{Cauchy, Exponential, Fast, Linear, Logarithmic};
+use tempura_sa::energy::FnEnergy;
+use tempura_sa::moves::{GaussianMove, MoveOperator, SwapMove};
+use tempura_sa::prelude::{AnnealError, Annealer};
+use tempura_sa::rng::Rng;
+use tempura_sa::schedule::{Cauchy, Exponential, Fast, Linear, Logarithmic};
 
 fn main() -> Result<(), AnnealError> {
     println!("=== Tempura Industry Showcase ===\n");

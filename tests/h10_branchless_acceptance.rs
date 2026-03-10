@@ -10,8 +10,8 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::math;
-use tempura::rng::{Rng, Xoshiro256PlusPlus};
+use tempura_sa::math;
+use tempura_sa::rng::{Rng, Xoshiro256PlusPlus};
 
 /// Branching Metropolis acceptance (explicit if/else for comparison).
 #[inline(never)]
@@ -166,8 +166,8 @@ fn h10c_log_domain_equivalence() {
 ///   - Pass: p > 0.01
 #[test]
 fn h10d_fast_exp_indistinguishable() {
-    use tempura::energy::Energy;
-    use tempura::landscape::rastrigin::Rastrigin;
+    use tempura_sa::energy::Energy;
+    use tempura_sa::landscape::rastrigin::Rastrigin;
 
     let landscape = Rastrigin::new(2);
     let iterations = 100_000u64;

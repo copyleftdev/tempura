@@ -9,13 +9,13 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::energy::Energy;
-use tempura::landscape::barrier::{BarrierMove, TunableBarrier};
-use tempura::landscape::potential_well::{PotentialWell, WellNeighborMove};
-use tempura::math;
-use tempura::moves::MoveOperator;
-use tempura::rng::{Rng, Xoshiro256PlusPlus};
-use tempura::schedule::{CoolingSchedule, Exponential};
+use tempura_sa::energy::Energy;
+use tempura_sa::landscape::barrier::{BarrierMove, TunableBarrier};
+use tempura_sa::landscape::potential_well::{PotentialWell, WellNeighborMove};
+use tempura_sa::math;
+use tempura_sa::moves::MoveOperator;
+use tempura_sa::rng::{Rng, Xoshiro256PlusPlus};
+use tempura_sa::schedule::{CoolingSchedule, Exponential};
 
 /// Run classical SA and return (best_state, best_energy).
 fn run_classical_sa(

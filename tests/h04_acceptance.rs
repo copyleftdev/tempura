@@ -10,12 +10,12 @@
 #[allow(dead_code)]
 mod statistical;
 
-use tempura::energy::Energy;
-use tempura::landscape::rastrigin::Rastrigin;
-use tempura::math;
-use tempura::moves::{GaussianMove, MoveOperator};
-use tempura::rng::{Rng, Xoshiro256PlusPlus};
-use tempura::schedule::Adaptive;
+use tempura_sa::energy::Energy;
+use tempura_sa::landscape::rastrigin::Rastrigin;
+use tempura_sa::math;
+use tempura_sa::moves::{GaussianMove, MoveOperator};
+use tempura_sa::rng::{Rng, Xoshiro256PlusPlus};
+use tempura_sa::schedule::Adaptive;
 
 // ---------------------------------------------------------------------------
 // Helper: measure acceptance rate at a fixed temperature
@@ -126,8 +126,8 @@ fn h04b_adaptive_vs_tuned_exponential() {
         for &t0 in &t0s {
             let mut energies = Vec::new();
             for seed in 0..num_seeds {
-                let sched = tempura::schedule::Exponential::new(t0, alpha);
-                let mut sa = tempura::annealer::builder::<Vec<f64>>()
+                let sched = tempura_sa::schedule::Exponential::new(t0, alpha);
+                let mut sa = tempura_sa::annealer::builder::<Vec<f64>>()
                     .objective(rastrigin.clone())
                     .moves(mv.clone())
                     .schedule(sched)

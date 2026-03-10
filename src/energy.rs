@@ -27,7 +27,7 @@ pub trait Energy<S> {
 /// Convenience: energy from a closure.
 ///
 /// ```
-/// use tempura::energy::FnEnergy;
+/// use tempura_sa::energy::FnEnergy;
 ///
 /// let obj = FnEnergy(|x: &f64| x * x);
 /// ```

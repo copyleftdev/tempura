@@ -1,5 +1,5 @@
 [package]
-name = "tempura"
+name = "tempura-sa"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
@@ -7,7 +7,7 @@ description = "Zero-dependency simulated annealing, parallel tempering, and popu
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/copyleftdev/tempura"
 homepage = "https://github.com/copyleftdev/tempura"
-documentation = "https://docs.rs/tempura"
+documentation = "https://docs.rs/tempura-sa"
 readme = "README.md"
 keywords = ["annealing", "optimization", "metaheuristic", "combinatorial", "monte-carlo"]
 categories = ["algorithms", "science", "simulation"]
