@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-01 — Boltzmann Equilibrium Convergence Tests
 ///
 /// Validates that Tempura's Metropolis chain at fixed temperature converges

@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-05 — Parallel Tempering Mixing Enhancement
 ///
 /// Validates that:

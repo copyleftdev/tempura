@@ -1,15 +1,15 @@
-/// Move operators — state perturbation strategies.
-///
-/// # Contract (H-02: detailed balance)
-/// Move operators define the proposal distribution Q(x→y).
-/// For Metropolis acceptance to satisfy detailed balance, moves must either:
-/// 1. Be symmetric: Q(x→y) = Q(y→x) for all x, y
-/// 2. Provide the log proposal ratio: ln(Q(y→x) / Q(x→y)) for Hastings correction
-///
-/// # Design (Turon: pit-of-success)
-/// The default `log_proposal_ratio` returns 0.0 (symmetric assumption).
-/// Non-symmetric moves MUST override this. The `is_symmetric` method
-/// enables runtime validation.
+//! Move operators — state perturbation strategies.
+//!
+//! # Contract (H-02: detailed balance)
+//! Move operators define the proposal distribution Q(x→y).
+//! For Metropolis acceptance to satisfy detailed balance, moves must either:
+//! 1. Be symmetric: Q(x→y) = Q(y→x) for all x, y
+//! 2. Provide the log proposal ratio: ln(Q(y→x) / Q(x→y)) for Hastings correction
+//!
+//! # Design (Turon: pit-of-success)
+//! The default `log_proposal_ratio` returns 0.0 (symmetric assumption).
+//! Non-symmetric moves MUST override this. The `is_symmetric` method
+//! enables runtime validation.
 use crate::rng::Rng;
 
 /// A move operator that proposes a new candidate state from the current state.
@@ -142,6 +142,7 @@ impl GaussianMove {
     }
 
     /// Box-Muller transform: generate N(0,1) from two uniform draws.
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn normal(rng: &mut impl Rng) -> f64 {
         let u1 = rng.next_f64().max(f64::MIN_POSITIVE);
@@ -154,7 +155,7 @@ impl MoveOperator<Vec<f64>> for GaussianMove {
     fn propose(&self, state: &Vec<f64>, rng: &mut impl Rng) -> Vec<f64> {
         state
             .iter()
-            .map(|&x| x + self.sigma * Self::normal(rng))
+            .map(|&x| self.sigma.mul_add(Self::normal(rng), x))
             .collect()
     }
 }

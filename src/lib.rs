@@ -1,3 +1,20 @@
+// Crate-level lint policy (fine-grained overrides live in each module).
+// Deny-level lints are compile errors; warn-level appear in `cargo clippy`.
+// These mirror the [lints] table in Cargo.toml but apply to doc-tests too.
+#![deny(missing_docs, missing_debug_implementations)]
+#![warn(unused_qualifications, future_incompatible)]
+#![warn(clippy::pedantic, clippy::nursery)]
+#![allow(
+    // Common false-positives in a numerical library
+    clippy::module_name_repetitions,
+    clippy::must_use_candidate,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::missing_panics_doc,
+    clippy::similar_names,
+)]
+
 //! # Tempura — Temperature-Driven Optimization Primitives for Rust
 //!
 //! Tempura is a high-performance annealing framework providing composable
@@ -61,11 +78,12 @@ pub mod prelude {
     };
 
     /// Entry point for building an annealer.
+    #[derive(Debug, Clone, Copy)]
     pub struct Annealer;
 
     impl Annealer {
         /// Create a new annealer builder.
-        pub fn builder<S>() -> crate::annealer::AnnealerBuilder<S, (), (), ()> {
+        pub const fn builder<S>() -> crate::annealer::AnnealerBuilder<S, (), (), ()> {
             crate::annealer::builder()
         }
     }

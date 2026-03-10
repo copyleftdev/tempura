@@ -1,13 +1,13 @@
-/// Observability for annealing runs — energy trajectory, acceptance ratio,
-/// temperature evolution, and convergence diagnostics.
-///
-/// # Design (Lamport: make state explicit)
-/// Every metric is a concrete value, not an opaque counter.
-/// Users can inspect the full trajectory or summary statistics.
-///
-/// # Performance (Muratori: hot/cold splitting)
-/// Hot-path diagnostics (acceptance count, current energy) are updated inline.
-/// Cold-path diagnostics (full trajectory recording) are opt-in via feature flags.
+//! Observability for annealing runs — energy trajectory, acceptance ratio,
+//! temperature evolution, and convergence diagnostics.
+//!
+//! # Design (Lamport: make state explicit)
+//! Every metric is a concrete value, not an opaque counter.
+//! Users can inspect the full trajectory or summary statistics.
+//!
+//! # Performance (Muratori: hot/cold splitting)
+//! Hot-path diagnostics (acceptance count, current energy) are updated inline.
+//! Cold-path diagnostics (full trajectory recording) are opt-in via feature flags.
 
 /// Lightweight diagnostics accumulated during an annealing run.
 ///
@@ -28,7 +28,7 @@ pub struct RunDiagnostics {
 
 impl RunDiagnostics {
     /// Create diagnostics for a run starting at the given energy.
-    pub fn new(initial_energy: f64) -> Self {
+    pub const fn new(initial_energy: f64) -> Self {
         Self {
             total_proposals: 0,
             accepted_proposals: 0,
@@ -55,7 +55,6 @@ impl RunDiagnostics {
         (self.initial_energy - self.best_energy) / self.initial_energy.abs()
     }
 
-    #[inline(always)]
     pub(crate) fn record_proposal(&mut self, accepted: bool, energy: f64) {
         self.total_proposals += 1;
         if accepted {
@@ -101,6 +100,7 @@ impl TrajectoryRecorder {
     }
 
     /// Pre-allocate capacity for expected number of recorded samples.
+    #[must_use]
     pub fn with_capacity(mut self, expected_steps: u64) -> Self {
         let n = (expected_steps / self.sample_interval + 1) as usize;
         self.energies.reserve(n);
@@ -109,7 +109,6 @@ impl TrajectoryRecorder {
         self
     }
 
-    #[inline(always)]
     pub(crate) fn record(&mut self, energy: f64, temperature: f64, was_accepted: bool) {
         self.step += 1;
         if self.step % self.sample_interval == 0 {
@@ -142,10 +141,8 @@ impl TrajectoryRecorder {
             if a {
                 accept_count += 1;
             }
-            if i >= window {
-                if self.accepted[i - window] {
-                    accept_count -= 1;
-                }
+            if i >= window && self.accepted[i - window] {
+                accept_count -= 1;
             }
             let w = (i + 1).min(window) as f64;
             rates.push(accept_count as f64 / w);

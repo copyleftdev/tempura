@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// Shared statistical test utilities for hypothesis testing.
 ///
 /// Provides chi-squared goodness-of-fit, Kolmogorov-Smirnov tests,

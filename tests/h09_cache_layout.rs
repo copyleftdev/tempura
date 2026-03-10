@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-09 — Cache-Friendly Layout Throughput
 ///
 /// Validates that:

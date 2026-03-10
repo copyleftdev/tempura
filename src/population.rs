@@ -1,22 +1,22 @@
-/// Population Annealing engine.
-///
-/// # Theory (H-06)
-/// Maintains a population of N solutions. At each temperature step:
-///   1. Compute Boltzmann weights: w_i = exp(-E(x_i) · Δβ)
-///   2. Resample population proportional to weights
-///   3. Equilibrate each member with M Metropolis sweeps
-///
-/// This yields unbiased estimates of the partition function ratio Z(T_{k+1})/Z(T_k)
-/// and enables direct free energy computation. Error scales as O(1/√N).
-///
-/// # Design (Turon: composable builder; Lamport: deterministic state machine)
-/// Each population member has its own RNG for deterministic reproduction.
-/// Resampling uses systematic resampling (lower variance than multinomial).
-/// All weight computations use log-space arithmetic for numerical stability.
-///
-/// # Performance (Muratori: embarrassingly parallel structure)
-/// Equilibration sweeps are independent across population members — ideal for
-/// future rayon parallelization. Single-threaded for now (correctness first).
+//! Population Annealing engine.
+//!
+//! # Theory (H-06)
+//! Maintains a population of N solutions. At each temperature step:
+//!   1. Compute Boltzmann weights: `w_i` = exp(-E(x_i) · Δβ)
+//!   2. Resample population proportional to weights
+//!   3. Equilibrate each member with M Metropolis sweeps
+//!
+//! This yields unbiased estimates of the partition function ratio Z(T_{`k+1})/Z(T_k`)
+//! and enables direct free energy computation. Error scales as O(1/√N).
+//!
+//! # Design (Turon: composable builder; Lamport: deterministic state machine)
+//! Each population member has its own RNG for deterministic reproduction.
+//! Resampling uses systematic resampling (lower variance than multinomial).
+//! All weight computations use log-space arithmetic for numerical stability.
+//!
+//! # Performance (Muratori: embarrassingly parallel structure)
+//! Equilibration sweeps are independent across population members — ideal for
+//! future rayon parallelization. Single-threaded for now (correctness first).
 use crate::energy::Energy;
 use crate::error::AnnealError;
 use crate::math;
@@ -58,7 +58,7 @@ pub struct PAResult<S> {
     pub final_energies: Vec<f64>,
     /// Per-step diagnostics.
     pub step_diagnostics: Vec<StepDiagnostics>,
-    /// Estimated log partition function ratio: ln(Z(T_final) / Z(T_0)).
+    /// Estimated log partition function ratio: `ln(Z(T_final)` / `Z(T_0)`).
     pub log_partition_ratio: f64,
 }
 
@@ -82,6 +82,21 @@ where
     _phantom: core::marker::PhantomData<(S, R)>,
 }
 
+impl<S, E, M, R> core::fmt::Debug for PopulationAnnealer<S, E, M, R>
+where
+    E: Energy<S>,
+    M: MoveOperator<S>,
+    R: Rng,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("PopulationAnnealer")
+            .field("temperatures", &self.temperatures)
+            .field("population_size", &self.population_size)
+            .field("sweeps_per_step", &self.sweeps_per_step)
+            .finish_non_exhaustive()
+    }
+}
+
 impl<S, E, M> PopulationAnnealer<S, E, M, DefaultRng>
 where
     S: Clone + core::fmt::Debug,
@@ -103,6 +118,7 @@ where
     M: MoveOperator<S>,
     R: Rng,
 {
+    #[allow(clippy::too_many_lines)]
     fn run_impl<R2: Rng>(&self, initial: S) -> PAResult<S> {
         let n = self.population_size;
         let initial_energy = self.objective.energy(&initial);
@@ -112,13 +128,13 @@ where
         let mut energies: Vec<f64> = vec![initial_energy; n];
         let mut rngs: Vec<R2> = (0..n)
             .map(|i| {
-                let member_seed = self.seed ^ ((i as u64).wrapping_mul(0x9E3779B97F4A7C15));
+                let member_seed = self.seed ^ ((i as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15));
                 R2::from_seed(member_seed)
             })
             .collect();
 
         // Resampling RNG — deterministic, independent of member RNGs
-        let mut resample_rng = R2::from_seed(self.seed.wrapping_mul(0x6A09E667F3BCC908));
+        let mut resample_rng = R2::from_seed(self.seed.wrapping_mul(0x6A09_E667_F3BC_C908));
 
         let mut best_state = initial;
         let mut best_energy = initial_energy;
@@ -177,7 +193,7 @@ where
                 .enumerate()
                 .map(|(new_i, &old_i)| {
                     let resample_seed = rngs[old_i].next_u64()
-                        ^ ((new_i as u64).wrapping_mul(0x517CC1B727220A95))
+                        ^ ((new_i as u64).wrapping_mul(0x517C_C1B7_2722_0A95))
                         ^ (k as u64);
                     R2::from_seed(resample_seed)
                 })
@@ -206,7 +222,7 @@ where
                     let accepted = if log_correction == 0.0 {
                         math::metropolis_accept(delta_e, t_next, u)
                     } else {
-                        let adjusted = delta_e - t_next * log_correction;
+                        let adjusted = t_next.mul_add(-log_correction, delta_e);
                         math::metropolis_accept(adjusted, t_next, u)
                     };
 
@@ -298,13 +314,26 @@ pub struct PABuilder<S, E, M> {
     _phantom: core::marker::PhantomData<S>,
 }
 
+impl<S, E, M> core::fmt::Debug for PABuilder<S, E, M> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("PABuilder")
+            .field("seed", &self.seed)
+            .field("population_size", &self.population_size)
+            .field("sweeps_per_step", &self.sweeps_per_step)
+            .field("temperatures_set", &self.temperatures.is_some())
+            .field("objective_set", &self.objective.is_some())
+            .field("moves_set", &self.moves.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
 /// Entry point for building a population annealer.
-pub fn builder<S>() -> PABuilder<S, (), ()> {
+pub const fn builder<S>() -> PABuilder<S, (), ()> {
     PABuilder {
         objective: None,
         moves: None,
         temperatures: None,
-        population_size: 1000,
+        population_size: 1_000,
         sweeps_per_step: 10,
         seed: 0,
         _phantom: core::marker::PhantomData,
@@ -390,13 +419,15 @@ impl<S, E, M> PABuilder<S, E, M> {
     }
 
     /// Set the number of Metropolis sweeps per temperature step.
-    pub fn sweeps_per_step(mut self, m: u64) -> Self {
+    #[must_use]
+    pub const fn sweeps_per_step(mut self, m: u64) -> Self {
         self.sweeps_per_step = m;
         self
     }
 
     /// Set the RNG seed for reproducibility.
-    pub fn seed(mut self, seed: u64) -> Self {
+    #[must_use]
+    pub const fn seed(mut self, seed: u64) -> Self {
         self.seed = seed;
         self
     }

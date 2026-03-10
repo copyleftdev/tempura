@@ -1,15 +1,15 @@
-/// Energy (cost function) trait — the objective to minimize.
-///
-/// # Contract (H-01, H-02)
-/// - Must be pure: same state → same energy, no side effects
-/// - Must be deterministic: no internal randomness
-/// - Must return finite f64 (no NaN, no Inf)
-///
-/// # Design (Turon: user-first API)
-/// Generic over state type S, enabling:
-/// - Discrete problems (S = `Vec<usize>` for TSP)
-/// - Continuous problems (S = `Vec<f64>` for Rastrigin)
-/// - Physics problems (S = `[[i8; N]; N]` for Ising)
+//! Energy (cost function) trait — the objective to minimize.
+//!
+//! # Contract (H-01, H-02)
+//! - Must be pure: same state → same energy, no side effects
+//! - Must be deterministic: no internal randomness
+//! - Must return finite f64 (no NaN, no Inf)
+//!
+//! # Design (Turon: user-first API)
+//! Generic over state type S, enabling:
+//! - Discrete problems (S = `Vec<usize>` for TSP)
+//! - Continuous problems (S = `Vec<f64>` for Rastrigin)
+//! - Physics problems (S = `[[i8; N]; N]` for Ising)
 
 /// The objective function to minimize.
 ///
@@ -33,11 +33,16 @@ pub trait Energy<S> {
 /// ```
 pub struct FnEnergy<F>(pub F);
 
+impl<F> core::fmt::Debug for FnEnergy<F> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("FnEnergy").finish()
+    }
+}
+
 impl<S, F> Energy<S> for FnEnergy<F>
 where
     F: Fn(&S) -> f64,
 {
-    #[inline(always)]
     fn energy(&self, state: &S) -> f64 {
         (self.0)(state)
     }

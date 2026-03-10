@@ -1,0 +1,13 @@
+# Cargo workspace configuration
+# Applied to all cargo invocations in this directory tree.
+
+[alias]
+# Verification gate — mirrors /verify skill
+verify    = "clippy --all-targets -- -D warnings"
+doc-check = "doc --no-deps"
+deny-check = "deny check"
+
+[build]
+# Enforce missing-docs in doc builds via RUSTDOCFLAGS
+# (Also set explicitly in CI; this applies to local `cargo doc` runs.)
+rustdocflags = ["-D", "missing-docs", "-D", "warnings"]

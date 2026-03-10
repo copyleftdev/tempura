@@ -1,13 +1,13 @@
-/// Cooling schedules — temperature as a function of iteration.
-///
-/// # Contract (H-03, H-04)
-/// - `temperature(step)` must return a positive finite f64 for all step values
-/// - Non-adaptive schedules must be monotonically non-increasing
-/// - Logarithmic schedule is the only one with convergence guarantee (Hajek 1988)
-///
-/// # Design (Turon: composability)
-/// All schedules implement the same trait, enabling drop-in replacement
-/// in the Annealer builder.
+//! Cooling schedules — temperature as a function of iteration.
+//!
+//! # Contract (H-03, H-04)
+//! - `temperature(step)` must return a positive finite f64 for all step values
+//! - Non-adaptive schedules must be monotonically non-increasing
+//! - Logarithmic schedule is the only one with convergence guarantee (Hajek 1988)
+//!
+//! # Design (Turon: composability)
+//! All schedules implement the same trait, enabling drop-in replacement
+//! in the Annealer builder.
 
 /// A cooling schedule that maps iteration step → temperature.
 ///
@@ -56,6 +56,7 @@ impl Linear {
     }
 
     /// Set the minimum temperature floor.
+    #[must_use]
     pub fn with_t_min(mut self, t_min: f64) -> Self {
         assert!(t_min > 0.0, "minimum temperature must be positive");
         self.t_min = t_min;
@@ -64,9 +65,10 @@ impl Linear {
 }
 
 impl CoolingSchedule for Linear {
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn temperature(&self, step: u64) -> f64 {
-        (self.t0 - self.alpha * step as f64).max(self.t_min)
+        self.alpha.mul_add(-(step as f64), self.t0).max(self.t_min)
     }
 }
 
@@ -101,6 +103,7 @@ impl Exponential {
     }
 
     /// Set the minimum temperature floor.
+    #[must_use]
     pub fn with_t_min(mut self, t_min: f64) -> Self {
         assert!(t_min > 0.0, "minimum temperature must be positive");
         self.t_min = t_min;
@@ -109,6 +112,7 @@ impl Exponential {
 }
 
 impl CoolingSchedule for Exponential {
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn temperature(&self, step: u64) -> f64 {
         (self.t0 * self.alpha.powi(step as i32)).max(self.t_min)
@@ -145,6 +149,7 @@ impl Logarithmic {
     }
 
     /// Set the minimum temperature floor.
+    #[must_use]
     pub fn with_t_min(mut self, t_min: f64) -> Self {
         assert!(t_min > 0.0, "minimum temperature must be positive");
         self.t_min = t_min;
@@ -153,12 +158,13 @@ impl Logarithmic {
 }
 
 impl CoolingSchedule for Logarithmic {
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn temperature(&self, step: u64) -> f64 {
         if step == 0 {
             return self.c; // ln(1) = 0, avoid division by zero
         }
-        (self.c / (1.0 + step as f64).ln()).max(self.t_min)
+        (self.c / (step as f64).ln_1p()).max(self.t_min)
     }
 }
 
@@ -186,6 +192,7 @@ impl Fast {
     }
 
     /// Set the minimum temperature floor.
+    #[must_use]
     pub fn with_t_min(mut self, t_min: f64) -> Self {
         assert!(t_min > 0.0);
         self.t_min = t_min;
@@ -194,6 +201,7 @@ impl Fast {
 }
 
 impl CoolingSchedule for Fast {
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn temperature(&self, step: u64) -> f64 {
         (self.t0 / (1.0 + step as f64)).max(self.t_min)
@@ -224,6 +232,7 @@ impl Cauchy {
     }
 
     /// Set the minimum temperature floor.
+    #[must_use]
     pub fn with_t_min(mut self, t_min: f64) -> Self {
         assert!(t_min > 0.0);
         self.t_min = t_min;
@@ -232,10 +241,11 @@ impl Cauchy {
 }
 
 impl CoolingSchedule for Cauchy {
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn temperature(&self, step: u64) -> f64 {
         let k = step as f64;
-        (self.t0 / (1.0 + k * k)).max(self.t_min)
+        (self.t0 / k.mul_add(k, 1.0)).max(self.t_min)
     }
 }
 
@@ -301,6 +311,7 @@ impl Adaptive {
     }
 
     /// Set the learning rate γ for temperature adjustment.
+    #[must_use]
     pub fn with_gamma(mut self, gamma: f64) -> Self {
         assert!(gamma > 0.0, "gamma must be positive");
         self.gamma = gamma;
@@ -308,6 +319,7 @@ impl Adaptive {
     }
 
     /// Set the window size (proposals between temperature updates).
+    #[must_use]
     pub fn with_window(mut self, window: usize) -> Self {
         assert!(window > 0, "window must be positive");
         self.window = window;
@@ -315,6 +327,7 @@ impl Adaptive {
     }
 
     /// Set temperature bounds `[t_min, t_max]` to prevent runaway.
+    #[must_use]
     pub fn with_bounds(mut self, t_min: f64, t_max: f64) -> Self {
         assert!(t_min > 0.0 && t_max > t_min);
         self.t_min = t_min;
@@ -350,7 +363,7 @@ impl Adaptive {
     }
 
     /// Current temperature.
-    pub fn current_temperature(&self) -> f64 {
+    pub const fn current_temperature(&self) -> f64 {
         self.current_t
     }
 }

@@ -1,25 +1,25 @@
-/// Single-solution simulated annealing engine.
-///
-/// # Design (Turon: user-first API with builder pattern)
-/// ```ignore
-/// let result = Annealer::builder()
-///     .schedule(Exponential::new(1000.0, 0.995))
-///     .moves(SwapMove)
-///     .objective(tsp_energy)
-///     .iterations(1_000_000)
-///     .seed(42)
-///     .build()
-///     .run(initial_state);
-/// ```
-///
-/// # Performance (Muratori: hot/cold splitting)
-/// The inner loop touches only: state, energy, temperature, RNG, acceptance.
-/// Diagnostics, best-state tracking, and trajectory recording are cold-path.
-///
-/// # Correctness (Lamport: state machine)
-/// The annealer is a deterministic state machine:
-///   (state, energy, rng_state, step) → (state', energy', rng_state', step+1)
-/// Given the same seed and inputs, the output is bit-identical.
+//! Single-solution simulated annealing engine.
+//!
+//! # Design (Turon: user-first API with builder pattern)
+//! ```ignore
+//! let result = Annealer::builder()
+//!     .schedule(Exponential::new(1000.0, 0.995))
+//!     .moves(SwapMove)
+//!     .objective(tsp_energy)
+//!     .iterations(1_000_000)
+//!     .seed(42)
+//!     .build()
+//!     .run(initial_state);
+//! ```
+//!
+//! # Performance (Muratori: hot/cold splitting)
+//! The inner loop touches only: state, energy, temperature, RNG, acceptance.
+//! Diagnostics, best-state tracking, and trajectory recording are cold-path.
+//!
+//! # Correctness (Lamport: state machine)
+//! The annealer is a deterministic state machine:
+//!   (state, energy, `rng_state`, step) → (state', energy', `rng_state`', step+1)
+//! Given the same seed and inputs, the output is bit-identical.
 use crate::diagnostics::{AnnealResult, RunDiagnostics, TrajectoryRecorder};
 use crate::energy::Energy;
 use crate::error::AnnealError;
@@ -43,6 +43,21 @@ where
     iterations: u64,
     trajectory_interval: Option<u64>,
     _phantom: core::marker::PhantomData<S>,
+}
+
+impl<S, E, M, C, R> core::fmt::Debug for Annealer<S, E, M, C, R>
+where
+    E: Energy<S>,
+    M: MoveOperator<S>,
+    C: CoolingSchedule,
+    R: Rng,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Annealer")
+            .field("iterations", &self.iterations)
+            .field("trajectory_interval", &self.trajectory_interval)
+            .finish_non_exhaustive()
+    }
 }
 
 impl<S, E, M, C> Annealer<S, E, M, C, DefaultRng>
@@ -107,7 +122,7 @@ where
                 math::metropolis_accept(delta_e, temperature, u)
             } else {
                 // Hastings-corrected acceptance
-                let adjusted_delta = delta_e - temperature * log_correction;
+                let adjusted_delta = temperature.mul_add(-log_correction, delta_e);
                 math::metropolis_accept(adjusted_delta, temperature, u)
             };
 
@@ -158,8 +173,21 @@ pub struct AnnealerBuilder<S, E, M, C> {
     _phantom: core::marker::PhantomData<S>,
 }
 
+impl<S, E, M, C> core::fmt::Debug for AnnealerBuilder<S, E, M, C> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("AnnealerBuilder")
+            .field("seed", &self.seed)
+            .field("iterations", &self.iterations)
+            .field("trajectory_interval", &self.trajectory_interval)
+            .field("objective_set", &self.objective.is_some())
+            .field("moves_set", &self.moves.is_some())
+            .field("schedule_set", &self.schedule.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
 /// Entry point: `Annealer::builder()`.
-pub fn builder<S>() -> AnnealerBuilder<S, (), (), ()> {
+pub const fn builder<S>() -> AnnealerBuilder<S, (), (), ()> {
     AnnealerBuilder {
         objective: None,
         moves: None,
@@ -212,13 +240,15 @@ impl<S, E, M, C> AnnealerBuilder<S, E, M, C> {
     }
 
     /// Set the RNG seed for reproducibility.
-    pub fn seed(mut self, seed: u64) -> Self {
+    #[must_use]
+    pub const fn seed(mut self, seed: u64) -> Self {
         self.seed = seed;
         self
     }
 
     /// Set the number of iterations (proposals).
-    pub fn iterations(mut self, n: u64) -> Self {
+    #[must_use]
+    pub const fn iterations(mut self, n: u64) -> Self {
         self.iterations = n;
         self
     }
@@ -226,7 +256,8 @@ impl<S, E, M, C> AnnealerBuilder<S, E, M, C> {
     /// Enable trajectory recording at the given sample interval.
     ///
     /// `interval = 1` records every step. `interval = 100` records every 100th.
-    pub fn record_trajectory(mut self, interval: u64) -> Self {
+    #[must_use]
+    pub const fn record_trajectory(mut self, interval: u64) -> Self {
         self.trajectory_interval = Some(interval);
         self
     }

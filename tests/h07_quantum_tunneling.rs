@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-07 — Quantum Tunneling Barrier Advantage
 ///
 /// Validates that:

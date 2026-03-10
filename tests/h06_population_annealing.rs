@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-06 — Population Annealing Free Energy Estimation
 ///
 /// Validates that:

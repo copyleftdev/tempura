@@ -1,15 +1,15 @@
-/// 1D Discrete Potential Well — the simplest landscape with analytically
-/// known Boltzmann distribution.
-///
-/// Used by: H-01 (Boltzmann convergence), H-02 (detailed balance)
-///
-/// States: {0, 1, ..., n-1}
-/// Energy: E(x) = (x - center)²
-/// Move:   x → x ± 1 (symmetric neighbor proposal, clamped)
-///
-/// At temperature T, the exact Boltzmann distribution is:
-///   π(x) = exp(-(x - center)² / T) / Z(T)
-///   Z(T) = Σ_{x=0}^{n-1} exp(-(x - center)² / T)
+//! 1D Discrete Potential Well — the simplest landscape with analytically
+//! known Boltzmann distribution.
+//!
+//! Used by: H-01 (Boltzmann convergence), H-02 (detailed balance)
+//!
+//! States: {0, 1, ..., n-1}
+//! Energy: E(x) = (x - center)²
+//! Move:   x → x ± 1 (symmetric neighbor proposal, clamped)
+//!
+//! At temperature T, the exact Boltzmann distribution is:
+//!   π(x) = exp(-(x - center)² / T) / Z(T)
+//!   Z(T) = Σ_{x=0}^{n-1} exp(-(x - center)² / T)
 use crate::energy::Energy;
 use crate::moves::MoveOperator;
 use crate::rng::Rng;
@@ -34,7 +34,8 @@ impl PotentialWell {
     }
 
     /// Override the well center position.
-    pub fn with_center(mut self, center: f64) -> Self {
+    #[must_use]
+    pub const fn with_center(mut self, center: f64) -> Self {
         self.center = center;
         self
     }
@@ -54,7 +55,7 @@ impl PotentialWell {
         // Log-sum-exp for numerical stability
         let max_lw = log_weights
             .iter()
-            .cloned()
+            .copied()
             .fold(f64::NEG_INFINITY, f64::max);
         let sum_exp: f64 = log_weights.iter().map(|&lw| (lw - max_lw).exp()).sum();
         let log_z = max_lw + sum_exp.ln();
@@ -78,6 +79,7 @@ impl PotentialWell {
 }
 
 impl Energy<i64> for PotentialWell {
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn energy(&self, state: &i64) -> f64 {
         let dx = *state as f64 - self.center;
@@ -99,7 +101,7 @@ pub struct WellNeighborMove {
 
 impl WellNeighborMove {
     /// Create a neighbor move for a well with `n` states.
-    pub fn new(n: usize) -> Self {
+    pub const fn new(n: usize) -> Self {
         Self { n }
     }
 }
@@ -110,6 +112,8 @@ impl MoveOperator<i64> for WellNeighborMove {
         let candidate = *state + step;
         // Stay put at boundaries — this preserves symmetry.
         // Reflecting would make Q(0→1) = 1.0 ≠ Q(1→0) = 0.5.
+        // Safety: n is always small (< usize::MAX / 2) so the cast is safe.
+        #[allow(clippy::cast_possible_wrap)]
         if candidate < 0 || candidate >= self.n as i64 {
             *state
         } else {

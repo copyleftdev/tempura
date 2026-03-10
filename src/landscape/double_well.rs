@@ -1,10 +1,10 @@
-/// Asymmetric Double Well — landscape with tunable barrier for testing
-/// convergence and barrier-crossing algorithms.
-///
-/// Used by: H-03 (cooling optimality), H-05 (parallel tempering)
-///
-/// Two basins separated by a barrier of known height.
-/// Global minimum is in basin B (lower energy), local minimum in basin A.
+//! Asymmetric Double Well — landscape with tunable barrier for testing
+//! convergence and barrier-crossing algorithms.
+//!
+//! Used by: H-03 (cooling optimality), H-05 (parallel tempering)
+//!
+//! Two basins separated by a barrier of known height.
+//! Global minimum is in basin B (lower energy), local minimum in basin A.
 use crate::energy::Energy;
 use crate::moves::MoveOperator;
 use crate::rng::Rng;
@@ -63,12 +63,15 @@ impl DoubleWell {
     }
 
     /// Whether a state is in the global basin.
-    pub fn in_global_basin(&self, state: i64) -> bool {
-        state > self.barrier_pos as i64
+    pub const fn in_global_basin(&self, state: i64) -> bool {
+        // Safety: barrier_pos is always small (< usize::MAX / 2) so the cast is safe.
+        #[allow(clippy::cast_possible_wrap)]
+        let barrier = self.barrier_pos as i64;
+        state > barrier
     }
 
     /// Energy of the global minimum.
-    pub fn global_minimum_energy(&self) -> f64 {
+    pub const fn global_minimum_energy(&self) -> f64 {
         self.b_offset
     }
 }
@@ -76,18 +79,22 @@ impl DoubleWell {
 impl Energy<i64> for DoubleWell {
     fn energy(&self, state: &i64) -> f64 {
         let x = *state;
+        // Safety: n is always small (< usize::MAX / 2) so the cast is safe.
+        #[allow(clippy::cast_possible_wrap)]
         if x < 0 || x >= self.n as i64 {
             return f64::MAX; // out of bounds
         }
         let xu = x as usize;
-        if xu == self.barrier_pos {
-            self.barrier_height
-        } else if xu < self.barrier_pos {
-            let dx = x as f64 - self.a_center;
-            dx * dx / self.a_scale
-        } else {
-            let dx = x as f64 - self.b_center;
-            dx * dx / self.b_scale + self.b_offset
+        match xu.cmp(&self.barrier_pos) {
+            core::cmp::Ordering::Equal => self.barrier_height,
+            core::cmp::Ordering::Less => {
+                let dx = x as f64 - self.a_center;
+                dx * dx / self.a_scale
+            }
+            core::cmp::Ordering::Greater => {
+                let dx = x as f64 - self.b_center;
+                dx * dx / self.b_scale + self.b_offset
+            }
         }
     }
 }
@@ -101,7 +108,7 @@ pub struct DoubleWellMove {
 
 impl DoubleWellMove {
     /// Create a ±1 move for a double well with `n` states.
-    pub fn new(n: usize) -> Self {
+    pub const fn new(n: usize) -> Self {
         Self { n }
     }
 }
@@ -109,7 +116,10 @@ impl DoubleWellMove {
 impl MoveOperator<i64> for DoubleWellMove {
     fn propose(&self, state: &i64, rng: &mut impl Rng) -> i64 {
         let step = if rng.next_u64() & 1 == 0 { 1i64 } else { -1i64 };
-        (*state + step).clamp(0, self.n as i64 - 1)
+        // Safety: n is always small (< usize::MAX / 2) so the cast is safe.
+        #[allow(clippy::cast_possible_wrap)]
+        let n_max = self.n as i64 - 1;
+        (*state + step).clamp(0, n_max)
     }
 
     fn is_symmetric(&self) -> bool {

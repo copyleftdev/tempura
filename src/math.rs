@@ -1,19 +1,20 @@
-/// Numerical primitives for the annealing hot loop.
-///
-/// # Design rationale (H-10)
-/// The Metropolis acceptance decision `u < exp(-ΔE/T)` is the single hottest
-/// operation in any annealing run. This module provides:
-/// - Exact exp via libm (correct, ~20 cycles)
-/// - Fast approximate exp via Schraudolph's trick (~5 cycles, 0.1% error)
-/// - Log-domain comparison to avoid exp entirely (~3 cycles)
-///
-/// All functions are `#[inline(always)]` — they live in the caller's cache line.
+//! Numerical primitives for the annealing hot loop.
+//!
+//! # Design rationale (H-10)
+//! The Metropolis acceptance decision `u < exp(-ΔE/T)` is the single hottest
+//! operation in any annealing run. This module provides:
+//! - Exact exp via libm (correct, ~20 cycles)
+//! - Fast approximate exp via Schraudolph's trick (~5 cycles, 0.1% error)
+//! - Log-domain comparison to avoid exp entirely (~3 cycles)
+//!
+//! All functions are `#[inline(always)]` — they live in the caller's cache line.
 
 /// Numerically stable exp(-x) that handles extreme inputs without NaN/Inf.
 ///
 /// - x > 709.8: returns 0.0 (would underflow to 0 anyway)
-/// - x < -709.8: returns f64::MAX (clamped, avoids Inf)
+/// - x < -709.8: returns `f64::MAX` (clamped, avoids Inf)
 /// - Otherwise: std exp
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn stable_neg_exp(x: f64) -> f64 {
     if x > 709.0 {
@@ -29,6 +30,7 @@ pub fn stable_neg_exp(x: f64) -> f64 {
 ///
 /// Returns the probability directly (for diagnostics / logging).
 /// For the hot loop, prefer `metropolis_accept` which avoids the branch.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn metropolis_probability(delta_e: f64, temperature: f64) -> f64 {
     if delta_e <= 0.0 {
@@ -44,6 +46,7 @@ pub fn metropolis_probability(delta_e: f64, temperature: f64) -> f64 {
 /// `u < exp(-ΔE/T)` is always true for u ∈ [0,1). No branch needed.
 ///
 /// Returns true if the move should be accepted.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn metropolis_accept(delta_e: f64, temperature: f64, u: f64) -> bool {
     // Single comparison, no branch on ΔE sign.
@@ -54,10 +57,11 @@ pub fn metropolis_accept(delta_e: f64, temperature: f64, u: f64) -> bool {
 
 /// Log-domain Metropolis acceptance (H-10c).
 ///
-/// Avoids computing exp() entirely by comparing in log space:
+/// Avoids computing `exp()` entirely by comparing in log space:
 ///   u < exp(-ΔE/T)  ⟺  -ln(u) > ΔE/T
 ///
 /// `exp1_variate` is a pre-computed -ln(u) from `Rng::next_exp1()`.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn metropolis_accept_log_domain(delta_e: f64, temperature: f64, exp1_variate: f64) -> bool {
     // exp1_variate = -ln(u) > 0 always.
@@ -70,12 +74,14 @@ pub fn metropolis_accept_log_domain(delta_e: f64, temperature: f64, exp1_variate
 ///
 /// Satisfies detailed balance (H-02) but has strictly lower acceptance
 /// rate than Metropolis (Peskun, 1973).
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn barker_probability(delta_e: f64, temperature: f64) -> f64 {
     1.0 / (1.0 + (delta_e / temperature).exp())
 }
 
 /// Barker acceptance decision (branchless).
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn barker_accept(delta_e: f64, temperature: f64, u: f64) -> bool {
     u < barker_probability(delta_e, temperature)
@@ -88,6 +94,7 @@ pub fn barker_accept(delta_e: f64, temperature: f64, u: f64) -> bool {
 ///
 /// # Safety
 /// Returns garbage for |x| > 709. Caller must bounds-check.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn fast_exp(x: f64) -> f64 {
     // Schraudolph's trick: manipulate the exponent bits of f64.
@@ -103,7 +110,7 @@ pub fn fast_exp(x: f64) -> f64 {
         return f64::INFINITY;
     }
 
-    let bits = (A * x + B) as i64;
+    let bits = A.mul_add(x, B) as i64;
     f64::from_bits(bits as u64)
 }
 
@@ -112,6 +119,7 @@ pub fn fast_exp(x: f64) -> f64 {
 /// P = exp(-d * √(max(0, ΔE)))
 ///
 /// Does NOT satisfy detailed balance with Boltzmann distribution.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn quantum_tunneling_probability(delta_e: f64, width: f64) -> f64 {
     if delta_e <= 0.0 {
@@ -122,6 +130,7 @@ pub fn quantum_tunneling_probability(delta_e: f64, width: f64) -> f64 {
 }
 
 /// Quantum-inspired tunneling acceptance decision.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub fn quantum_tunneling_accept(delta_e: f64, width: f64, u: f64) -> bool {
     u < quantum_tunneling_probability(delta_e, width)

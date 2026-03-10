@@ -1,10 +1,10 @@
-/// Error types for the Tempura annealing framework.
-///
-/// Library code returns `Result<T, AnnealError>` instead of panicking
-/// so that callers can handle configuration errors gracefully.
+//! Error types for the Tempura annealing framework.
+//!
+//! Library code returns `Result<T, AnnealError>` instead of panicking
+//! so that callers can handle configuration errors gracefully.
 
 /// Errors that can occur when configuring or running an annealing algorithm.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AnnealError {
     /// A required builder field was not set.
     MissingField {
@@ -23,11 +23,11 @@ pub enum AnnealError {
 impl core::fmt::Display for AnnealError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            AnnealError::MissingField { field } => {
-                write!(f, "missing required field: {}", field)
+            Self::MissingField { field } => {
+                write!(f, "missing required field: {field}")
             }
-            AnnealError::InvalidParameter { name, reason } => {
-                write!(f, "invalid parameter '{}': {}", name, reason)
+            Self::InvalidParameter { name, reason } => {
+                write!(f, "invalid parameter '{name}': {reason}")
             }
         }
     }

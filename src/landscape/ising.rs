@@ -1,12 +1,12 @@
-/// 2D Ising Model — classical statistical mechanics benchmark.
-///
-/// Used by: H-01 (Boltzmann convergence), H-06 (population annealing free energy)
-///
-/// Square lattice with periodic boundary conditions.
-/// For small sizes (L=4), the exact partition function can be computed
-/// by exhaustive enumeration of all 2^(L²) states.
-///
-/// E(σ) = -J Σ_{⟨i,j⟩} σ_i · σ_j    where J=1, σ ∈ {-1, +1}
+//! 2D Ising Model — classical statistical mechanics benchmark.
+//!
+//! Used by: H-01 (Boltzmann convergence), H-06 (population annealing free energy)
+//!
+//! Square lattice with periodic boundary conditions.
+//! For small sizes (L=4), the exact partition function can be computed
+//! by exhaustive enumeration of all 2^(L²) states.
+//!
+//! E(σ) = -J Σ_{⟨i,j⟩} `σ_i` · `σ_j`    where J=1, σ ∈ {-1, +1}
 use crate::energy::Energy;
 use crate::moves::MoveOperator;
 use crate::rng::Rng;
@@ -31,13 +31,14 @@ impl Ising2D {
     }
 
     /// Set the coupling constant J.
-    pub fn with_coupling(mut self, j: f64) -> Self {
+    #[must_use]
+    pub const fn with_coupling(mut self, j: f64) -> Self {
         self.j = j;
         self
     }
 
     /// Total number of spins.
-    pub fn num_spins(&self) -> usize {
+    pub const fn num_spins(&self) -> usize {
         self.l * self.l
     }
 
@@ -53,13 +54,13 @@ impl Ising2D {
         vec![1i8; self.num_spins()]
     }
 
-    /// Magnetization: M = Σ σ_i.
+    /// Magnetization: M = Σ `σ_i`.
     pub fn magnetization(&self, state: &IsingState) -> f64 {
-        state.iter().map(|&s| s as f64).sum()
+        state.iter().map(|&s| f64::from(s)).sum()
     }
 
     /// Neighbor indices for site (r, c) with periodic boundaries.
-    fn neighbors(&self, idx: usize) -> [usize; 4] {
+    const fn neighbors(&self, idx: usize) -> [usize; 4] {
         let l = self.l;
         let r = idx / l;
         let c = idx % l;
@@ -73,15 +74,15 @@ impl Ising2D {
 
     /// Compute the energy change from flipping spin at `idx`.
     ///
-    /// ΔE = 2 · J · σ_idx · Σ_{neighbors} σ_j
+    /// ΔE = 2 · J · `σ_idx` · Σ_{neighbors} `σ_j`
     ///
     /// This is O(1) — the key to efficient single-spin-flip Metropolis.
     pub fn delta_energy_flip(&self, state: &IsingState, idx: usize) -> f64 {
-        let s = state[idx] as f64;
+        let s = f64::from(state[idx]);
         let neighbor_sum: f64 = self
             .neighbors(idx)
             .iter()
-            .map(|&n| state[n] as f64)
+            .map(|&n| f64::from(state[n]))
             .sum();
         2.0 * self.j * s * neighbor_sum
     }
@@ -89,7 +90,7 @@ impl Ising2D {
     /// Exact partition function by exhaustive enumeration.
     ///
     /// Only feasible for small L (L ≤ 4, i.e., ≤ 16 spins = 65536 states).
-    /// Returns Z(T) = Σ_σ exp(-E(σ)/T).
+    /// Returns Z(T) = `Σ_σ` exp(-E(σ)/T).
     pub fn exact_partition_function(&self, temperature: f64) -> f64 {
         let n = self.num_spins();
         assert!(n <= 20, "exact enumeration only feasible for ≤ 20 spins");
@@ -110,7 +111,7 @@ impl Ising2D {
         -temperature * self.exact_partition_function(temperature).ln()
     }
 
-    /// Exact mean energy ⟨E⟩ = Σ_σ E(σ) · exp(-E(σ)/T) / Z(T).
+    /// Exact mean energy ⟨E⟩ = `Σ_σ` E(σ) · exp(-E(σ)/T) / Z(T).
     pub fn exact_mean_energy(&self, temperature: f64) -> f64 {
         let n = self.num_spins();
         assert!(n <= 20);
@@ -137,12 +138,12 @@ impl Energy<IsingState> for Ising2D {
         for r in 0..l {
             for c in 0..l {
                 let idx = r * l + c;
-                let s = state[idx] as f64;
+                let s = f64::from(state[idx]);
                 // Only count right and down neighbors to avoid double-counting
                 let right = r * l + (c + 1) % l;
                 let down = ((r + 1) % l) * l + c;
-                e -= self.j * s * state[right] as f64;
-                e -= self.j * s * state[down] as f64;
+                e -= self.j * s * f64::from(state[right]);
+                e -= self.j * s * f64::from(state[down]);
             }
         }
         e
@@ -161,7 +162,7 @@ pub struct SingleSpinFlip {
 
 impl SingleSpinFlip {
     /// Create a single-spin-flip move for `n` total spins.
-    pub fn new(n: usize) -> Self {
+    pub const fn new(n: usize) -> Self {
         Self { n }
     }
 }

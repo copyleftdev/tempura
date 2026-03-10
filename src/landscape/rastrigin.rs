@@ -1,13 +1,13 @@
-/// N-dimensional Rastrigin function — multi-modal continuous benchmark.
-///
-/// Used by: H-04 (acceptance rate diagnostic), H-09 (cache layout)
-///
-/// E(x) = 10D + Σ_{i=1}^{D} [x_i² - 10·cos(2πx_i)]
-///
-/// Properties:
-/// - Global minimum: E(0,...,0) = 0
-/// - Many local minima: grid of ~D^10 local minima in [-5.12, 5.12]^D
-/// - Highly multi-modal: tests ability to escape local minima
+//! N-dimensional Rastrigin function — multi-modal continuous benchmark.
+//!
+//! Used by: H-04 (acceptance rate diagnostic), H-09 (cache layout)
+//!
+//! E(x) = 10D + Σ_{i=1}^{D} [`x_i²` - `10·cos(2πx_i)`]
+//!
+//! Properties:
+//! - Global minimum: E(0,...,0) = 0
+//! - Many local minima: grid of ~D^10 local minima in [-5.12, 5.12]^D
+//! - Highly multi-modal: tests ability to escape local minima
 use crate::energy::Energy;
 
 /// N-dimensional Rastrigin energy function.
@@ -25,7 +25,7 @@ impl Rastrigin {
     }
 
     /// The known global minimum energy (always 0).
-    pub fn global_minimum(&self) -> f64 {
+    pub const fn global_minimum(&self) -> f64 {
         0.0
     }
 
@@ -36,6 +36,7 @@ impl Rastrigin {
 }
 
 impl Energy<Vec<f64>> for Rastrigin {
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn energy(&self, state: &Vec<f64>) -> f64 {
         debug_assert_eq!(state.len(), self.dim, "state dimension mismatch");
@@ -44,7 +45,7 @@ impl Energy<Vec<f64>> for Rastrigin {
         a * self.dim as f64
             + state
                 .iter()
-                .map(|&x| x * x - a * (two_pi * x).cos())
+                .map(|&x| x.mul_add(x, -a * (two_pi * x).cos()))
                 .sum::<f64>()
     }
 }

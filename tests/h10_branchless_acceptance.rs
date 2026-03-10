@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-10 — Branchless Acceptance Hot-Loop Speedup
 ///
 /// Validates that:

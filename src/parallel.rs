@@ -1,23 +1,25 @@
-/// Parallel Tempering (Replica Exchange) engine.
-///
-/// # Theory (H-05)
-/// Runs R replicas at different temperatures T₁ < T₂ < ... < T_R.
-/// Periodically proposes swaps between adjacent replicas:
-///
-///   P_swap(i,j) = min(1, exp((1/T_i - 1/T_j)(E_j - E_i)))
-///
-/// This preserves the extended Boltzmann distribution over the product space
-/// and enables barrier crossing via high-temperature exploration.
-///
-/// # Design (Turon: composable builder; Lamport: deterministic state machine)
-/// Each replica is a deterministic state machine with its own RNG.
-/// Swap decisions use a dedicated "swap RNG" for reproducibility.
-/// The entire PT run is bit-reproducible given the same seed.
-///
-/// # Performance (Muratori: hot/cold split)
-/// Per-replica Metropolis steps are the hot path.
-/// Swap proposals are cold path (every `swap_interval` steps).
-/// Single-threaded for correctness; parallelism is a future optimization.
+//! Parallel Tempering (Replica Exchange) engine.
+//!
+//! # Theory (H-05)
+//! Runs R replicas at different temperatures T₁ < T₂ < ... < `T_R`.
+//! Periodically proposes swaps between adjacent replicas:
+//!
+//! ```text
+//! P_swap(i,j) = min(1, exp((1/T_i - 1/T_j)(E_j - E_i)))
+//! ```
+//!
+//! This preserves the extended Boltzmann distribution over the product space
+//! and enables barrier crossing via high-temperature exploration.
+//!
+//! # Design (Turon: composable builder; Lamport: deterministic state machine)
+//! Each replica is a deterministic state machine with its own RNG.
+//! Swap decisions use a dedicated "swap RNG" for reproducibility.
+//! The entire PT run is bit-reproducible given the same seed.
+//!
+//! # Performance (Muratori: hot/cold split)
+//! Per-replica Metropolis steps are the hot path.
+//! Swap proposals are cold path (every `swap_interval` steps).
+//! Single-threaded for correctness; parallelism is a future optimization.
 use crate::energy::Energy;
 use crate::error::AnnealError;
 use crate::math;
@@ -28,10 +30,14 @@ use crate::rng::{DefaultRng, Rng};
 // Temperature ladder
 // ---------------------------------------------------------------------------
 
-/// Geometric temperature ladder: T_r = T_min * (T_max / T_min)^(r / (R-1))
+/// Geometric temperature ladder: `T_r` = `T_min` * (`T_max` / `T_min`)^(r / (R-1))
 ///
 /// This spacing ensures approximately equal swap acceptance rates between
 /// adjacent pairs when the energy variance scales smoothly with T.
+///
+/// # Errors
+/// Returns [`AnnealError::InvalidParameter`] if `t_min <= 0`, `t_max <= t_min`,
+/// or `num_replicas < 2`.
 pub fn geometric_ladder(t_min: f64, t_max: f64, num_replicas: usize) -> Result<Vec<f64>, AnnealError> {
     if t_min <= 0.0 {
         return Err(AnnealError::InvalidParameter { name: "t_min", reason: "must be positive" });
@@ -115,6 +121,21 @@ where
     _phantom: core::marker::PhantomData<(S, R)>,
 }
 
+impl<S, E, M, R> core::fmt::Debug for ParallelTempering<S, E, M, R>
+where
+    E: Energy<S>,
+    M: MoveOperator<S>,
+    R: Rng,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ParallelTempering")
+            .field("temperatures", &self.temperatures)
+            .field("iterations_per_replica", &self.iterations_per_replica)
+            .field("swap_interval", &self.swap_interval)
+            .finish_non_exhaustive()
+    }
+}
+
 impl<S, E, M> ParallelTempering<S, E, M, DefaultRng>
 where
     S: Clone + core::fmt::Debug,
@@ -136,6 +157,7 @@ where
     M: MoveOperator<S>,
     R: Rng,
 {
+    #[allow(clippy::too_many_lines)]
     fn run_impl<R2: Rng>(&self, initial: S) -> PTResult<S> {
         let num_replicas = self.temperatures.len();
         let initial_energy = self.objective.energy(&initial);
@@ -144,7 +166,7 @@ where
         // Seed derivation: replica r gets seed = base_seed XOR (r * golden_ratio_bits)
         let mut replicas: Vec<Replica<S, R2>> = (0..num_replicas)
             .map(|r| {
-                let replica_seed = self.seed ^ ((r as u64).wrapping_mul(0x9E3779B97F4A7C15));
+                let replica_seed = self.seed ^ ((r as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15));
                 Replica {
                     state: initial.clone(),
                     energy: initial_energy,
@@ -155,10 +177,10 @@ where
             .collect();
 
         // Swap RNG — deterministic, independent of replica RNGs
-        let mut swap_rng = R2::from_seed(self.seed.wrapping_mul(0x517CC1B727220A95));
+        let mut swap_rng = R2::from_seed(self.seed.wrapping_mul(0x517C_C1B7_2722_0A95));
 
         // Track best across all replicas
-        let mut best_state = initial.clone();
+        let mut best_state = initial;
         let mut best_energy = initial_energy;
 
         // Swap diagnostics
@@ -188,7 +210,7 @@ where
                 let accepted = if log_correction == 0.0 {
                     math::metropolis_accept(delta_e, replica.temperature, u)
                 } else {
-                    let adjusted_delta = delta_e - replica.temperature * log_correction;
+                    let adjusted_delta = replica.temperature.mul_add(-log_correction, delta_e);
                     math::metropolis_accept(adjusted_delta, replica.temperature, u)
                 };
 
@@ -299,8 +321,21 @@ pub struct PTBuilder<S, E, M> {
     _phantom: core::marker::PhantomData<S>,
 }
 
+impl<S, E, M> core::fmt::Debug for PTBuilder<S, E, M> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("PTBuilder")
+            .field("seed", &self.seed)
+            .field("iterations_per_replica", &self.iterations_per_replica)
+            .field("swap_interval", &self.swap_interval)
+            .field("temperatures_set", &self.temperatures.is_some())
+            .field("objective_set", &self.objective.is_some())
+            .field("moves_set", &self.moves.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
 /// Entry point: `parallel_tempering()`.
-pub fn builder<S>() -> PTBuilder<S, (), ()> {
+pub const fn builder<S>() -> PTBuilder<S, (), ()> {
     PTBuilder {
         objective: None,
         moves: None,
@@ -367,19 +402,22 @@ impl<S, E, M> PTBuilder<S, E, M> {
     }
 
     /// Set the number of iterations per replica.
-    pub fn iterations(mut self, n: u64) -> Self {
+    #[must_use]
+    pub const fn iterations(mut self, n: u64) -> Self {
         self.iterations_per_replica = n;
         self
     }
 
     /// Set the swap interval (propose swaps every N steps).
-    pub fn swap_interval(mut self, interval: u64) -> Self {
+    #[must_use]
+    pub const fn swap_interval(mut self, interval: u64) -> Self {
         self.swap_interval = interval;
         self
     }
 
     /// Set the RNG seed for reproducibility.
-    pub fn seed(mut self, seed: u64) -> Self {
+    #[must_use]
+    pub const fn seed(mut self, seed: u64) -> Self {
         self.seed = seed;
         self
     }

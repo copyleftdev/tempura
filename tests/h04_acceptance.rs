@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-04 — Acceptance Rate as Sufficient Diagnostic
 ///
 /// Validates that:

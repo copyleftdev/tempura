@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-08 — RNG Quality Independence
 ///
 /// Validates that:

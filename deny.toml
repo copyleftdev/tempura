@@ -1,0 +1,57 @@
+# cargo-deny configuration
+# Run: cargo deny check
+# Install: cargo install cargo-deny
+
+[graph]
+# Only check targets we actually ship for
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "x86_64-apple-darwin" },
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "aarch64-unknown-linux-gnu" },
+    { triple = "aarch64-apple-darwin" },
+]
+
+# ── Advisories ───────────────────────────────────────────────────────────────
+[advisories]
+# RustSec advisory database
+version = 2
+db-urls = ["https://github.com/rustsec/advisory-db"]
+ignore = []
+
+# ── Licenses ─────────────────────────────────────────────────────────────────
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+]
+# Deny copyleft licenses (GPL, LGPL, AGPL, EUPL, MPL)
+copyleft = "deny"
+# Treat missing license info as a warning
+private = { ignore = true }
+
+# ── Bans ─────────────────────────────────────────────────────────────────────
+[bans]
+# Deny multiple versions of the same crate
+multiple-versions = "warn"
+wildcards = "deny"            # wildcard version requirements are imprecise
+# Crates that must never appear (transitive or direct)
+deny = []
+# Crates that are allowed to appear multiple times (common in the ecosystem)
+skip = []
+
+# ── Sources ──────────────────────────────────────────────────────────────────
+[sources]
+# Only allow crates from crates.io; no git or private registries
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

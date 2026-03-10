@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 /// H-02 — Detailed Balance & Reversibility Tests
 ///
 /// Validates that Metropolis and Barker acceptance satisfy detailed balance,

@@ -1,8 +1,8 @@
-/// Tunable Barrier Geometry — for testing quantum-inspired tunneling (H-07).
-///
-/// Two basins separated by a barrier whose height and width are independently
-/// controllable, allowing systematic comparison of classical SA (height-dependent)
-/// vs quantum-inspired (width-dependent) acceptance.
+//! Tunable Barrier Geometry — for testing quantum-inspired tunneling (H-07).
+//!
+//! Two basins separated by a barrier whose height and width are independently
+//! controllable, allowing systematic comparison of classical SA (height-dependent)
+//! vs quantum-inspired (width-dependent) acceptance.
 use crate::energy::Energy;
 use crate::moves::MoveOperator;
 use crate::rng::Rng;
@@ -70,19 +70,24 @@ impl TunableBarrier {
     }
 
     /// Barrier width in number of states.
-    pub fn barrier_width(&self) -> usize {
+    pub const fn barrier_width(&self) -> usize {
         self.barrier_end - self.barrier_start + 1
     }
 
     /// Whether a state is in the global basin.
-    pub fn in_global_basin(&self, state: i64) -> bool {
-        state > self.barrier_end as i64
+    pub const fn in_global_basin(&self, state: i64) -> bool {
+        // Safety: barrier_end is always small (< usize::MAX / 2) so the cast is safe.
+        #[allow(clippy::cast_possible_wrap)]
+        let end = self.barrier_end as i64;
+        state > end
     }
 }
 
 impl Energy<i64> for TunableBarrier {
     fn energy(&self, state: &i64) -> f64 {
         let x = *state;
+        // Safety: n is always small (< usize::MAX / 2) so the cast is safe.
+        #[allow(clippy::cast_possible_wrap)]
         if x < 0 || x >= self.n as i64 {
             return f64::MAX;
         }
@@ -108,7 +113,7 @@ pub struct BarrierMove {
 
 impl BarrierMove {
     /// Create a ±1 move for a barrier landscape with `n` states.
-    pub fn new(n: usize) -> Self {
+    pub const fn new(n: usize) -> Self {
         Self { n }
     }
 }
@@ -116,7 +121,10 @@ impl BarrierMove {
 impl MoveOperator<i64> for BarrierMove {
     fn propose(&self, state: &i64, rng: &mut impl Rng) -> i64 {
         let step = if rng.next_u64() & 1 == 0 { 1i64 } else { -1i64 };
-        (*state + step).clamp(0, self.n as i64 - 1)
+        // Safety: n is always small (< usize::MAX / 2) so the cast is safe.
+        #[allow(clippy::cast_possible_wrap)]
+        let n_max = self.n as i64 - 1;
+        (*state + step).clamp(0, n_max)
     }
 
     fn is_symmetric(&self) -> bool {
