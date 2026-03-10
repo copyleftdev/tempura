@@ -3,13 +3,13 @@ name = "tempura"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
-description = "Temperature-Driven Optimization Primitives for Rust"
+description = "Zero-dependency simulated annealing, parallel tempering, and population annealing for Rust"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/tempura-rs/tempura"
-homepage = "https://github.com/tempura-rs/tempura"
+repository = "https://github.com/copyleftdev/tempura"
+homepage = "https://github.com/copyleftdev/tempura"
 documentation = "https://docs.rs/tempura"
 readme = "README.md"
-keywords = ["annealing", "optimization", "simulated-annealing", "metaheuristic"]
+keywords = ["annealing", "optimization", "metaheuristic", "combinatorial", "monte-carlo"]
 categories = ["algorithms", "science", "simulation"]
 include = [
     "src/**/*",

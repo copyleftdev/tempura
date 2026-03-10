@@ -6,7 +6,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/tempura.svg)](https://crates.io/crates/tempura)
 [![docs.rs](https://docs.rs/tempura/badge.svg)](https://docs.rs/tempura)
-[![CI](https://github.com/tempura-rs/tempura/actions/workflows/ci.yml/badge.svg)](https://github.com/tempura-rs/tempura/actions/workflows/ci.yml)
+[![CI](https://github.com/copyleftdev/tempura/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/tempura/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 [![MSRV](https://img.shields.io/badge/MSRV-1.70-orange.svg)](https://blog.rust-lang.org/2023/06/01/Rust-1.70.0.html)
 
