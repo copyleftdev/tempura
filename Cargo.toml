@@ -1,6 +1,6 @@
 [package]
 name = "tempura-sa"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.70"
 description = "Zero-dependency simulated annealing, parallel tempering, and population annealing for Rust"

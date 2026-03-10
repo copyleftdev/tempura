@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.1] — 2026-03-10
+
+### Changed
+- Renamed crate from `tempura` to `tempura-sa` (the name `tempura` was already taken on crates.io)
+- Updated all README examples to use `tempura_sa::` imports
+- Fixed repository and homepage URLs in crate metadata
+
+---
+
 ## [0.1.0] — 2026-03-09
 
 ### Added
